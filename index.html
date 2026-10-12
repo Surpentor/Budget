@@ -1,1014 +1,881 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Household Budget</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  color-scheme:light dark;
-  --bg:#f7efe5; --surface:#fffaf3; --surface-2:#f2e3d1; --ink:#35163d; --muted:#735b70;
-  --line:#d9b995; --deep:#5a195e; --deep-ink:#fff8fb; --lime:#f4bfd5; --lime-ink:#53113d; --coral:#ef218c;
-  --mike:#753c94; --mike-soft:#eadcf3; --mike-ink:#fff; --sara:#e91e8d; --sara-soft:#ffe0ee; --sara-ink:#160b17;
-  --shared:#b66b32; --shared-soft:#f2dfc7; --shared-ink:#160b17; --leather:#b66b32; --cream:#fff5e8;
-  --shadow:0 20px 54px rgba(74,25,76,.14);
-  --pink:var(--sara); --purple:var(--mike); --purple-dark:var(--deep);
-  --tan:var(--leather); --tan-dark:var(--shared); --card:var(--surface);
-  --danger:#b3261e; --green:#2e7d32;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#1d111e; --surface:#2b182d; --surface-2:#38223a; --ink:#fff4f8; --muted:#d5b9cd;
-    --line:#684561; --deep:#f0cbe9; --deep-ink:#35163d; --lime:#e995b9; --lime-ink:#3b0d2d; --coral:#ff58aa;
-    --mike:#c18be0; --mike-soft:#472756; --mike-ink:#160b17; --sara:#ff64b2; --sara-soft:#54223d; --sara-ink:#35163d;
-    --shared:#d79a64; --shared-soft:#503a29; --shared-ink:#160b17; --leather:#d79a64; --cream:#fff0e2;
-    --shadow:0 24px 70px rgba(0,0,0,.38);
-    --danger:#ff9d94; --green:#8fd694;
-  }
-}
-/* manual theme override (theme toggle) */
-html[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#1d111e; --surface:#2b182d; --surface-2:#38223a; --ink:#fff4f8; --muted:#d5b9cd;
-  --line:#684561; --deep:#f0cbe9; --deep-ink:#35163d; --lime:#e995b9; --lime-ink:#3b0d2d; --coral:#ff58aa;
-  --mike:#c18be0; --mike-soft:#472756; --mike-ink:#160b17; --sara:#ff64b2; --sara-soft:#54223d; --sara-ink:#35163d;
-  --shared:#d79a64; --shared-soft:#503a29; --shared-ink:#160b17; --leather:#d79a64; --cream:#fff0e2;
-  --shadow:0 24px 70px rgba(0,0,0,.38);
-  --pink:var(--sara); --purple:var(--mike); --purple-dark:var(--deep);
-  --tan:var(--leather); --tan-dark:var(--shared); --card:var(--surface);
-  --danger:#ff9d94; --green:#8fd694;
-}
-html[data-theme="light"]{
-  color-scheme:light;
-  --bg:#f7efe5; --surface:#fffaf3; --surface-2:#f2e3d1; --ink:#35163d; --muted:#735b70;
-  --line:#d9b995; --deep:#5a195e; --deep-ink:#fff8fb; --lime:#f4bfd5; --lime-ink:#53113d; --coral:#ef218c;
-  --mike:#753c94; --mike-soft:#eadcf3; --mike-ink:#fff; --sara:#e91e8d; --sara-soft:#ffe0ee; --sara-ink:#160b17;
-  --shared:#b66b32; --shared-soft:#f2dfc7; --shared-ink:#160b17; --leather:#b66b32; --cream:#fff5e8;
-  --shadow:0 20px 54px rgba(74,25,76,.14);
-  --pink:var(--sara); --purple:var(--mike); --purple-dark:var(--deep);
-  --tan:var(--leather); --tan-dark:var(--shared); --card:var(--surface);
-  --danger:#b3261e; --green:#2e7d32;
-}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{
-  margin:0; min-width:320px; color:var(--ink); line-height:1.45;
-  font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background-color:var(--bg);
-  background-image:linear-gradient(45deg,transparent 46%,color-mix(in srgb,var(--shared) 8%,transparent) 46% 54%,transparent 54%),linear-gradient(-45deg,transparent 46%,color-mix(in srgb,var(--sara) 7%,transparent) 46% 54%,transparent 54%);
-  background-size:34px 34px;
-  padding-top:52px;
-}
-button{font:inherit;color:inherit}
-input,select{font:inherit}
-/* ---- save bar ---- */
-#savebar{
-  position:fixed; top:0; left:0; right:0; z-index:60;
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  min-height:52px; box-sizing:border-box;
-  padding:8px 12px; background:#43104b; color:#fff8fb; font-size:13px; font-weight:700;
-}
-#savebar .saving{color:#ffd9e8}
-#savebar .saved{color:#b9f0c0}
-#savebar .offline{color:#ffcf9e}
-#reset-btn{
-  background:transparent; border:1px solid rgba(255,248,251,.5); color:#fff8fb;
-  border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
-}
-#reset-btn:hover{background:rgba(255,248,251,.12)}
-/* ---- hero header ---- */
-.hero{
-  margin:14px auto 0; width:min(860px,calc(100% - 24px));
-  padding:32px 30px; position:relative; overflow:hidden;
-  border-radius:26px 26px 12px 12px; border-bottom:10px solid var(--leather);
-  color:#fff8fb; background:linear-gradient(112deg,rgba(67,16,75,.98) 0 48%,rgba(114,28,117,.93) 72%,rgba(232,30,141,.88)),#5a195e;
-  box-shadow:var(--shadow);
-}
-.hero::before{
-  content:""; position:absolute; inset:0; opacity:.26; pointer-events:none;
-  background-image:linear-gradient(45deg,transparent 42%,#fff5e8 42% 48%,transparent 48% 52%,#ef218c 52% 58%,transparent 58%),linear-gradient(-45deg,transparent 42%,#fff5e8 42% 48%,transparent 48% 52%,#9d4db5 52% 58%,transparent 58%);
-  background-size:74px 74px; background-position:right -8px top -8px;
-  mask-image:linear-gradient(90deg,transparent 30%,#000 78%);
-  -webkit-mask-image:linear-gradient(90deg,transparent 30%,#000 78%);
-}
-.hero .eyebrow{
-  position:relative; z-index:1; display:flex; align-items:center; gap:10px;
-  font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#ffb4d7; margin-bottom:10px;
-}
-#theme-toggle{
-  position:absolute; top:14px; right:14px; z-index:2;
-  width:42px; height:42px; border-radius:50%; cursor:pointer;
-  border:1px solid rgba(255,245,232,.4); background:rgba(55,12,60,.55); color:#fff8fb;
-  font-size:19px; line-height:1; display:flex; align-items:center; justify-content:center;
-}
-#theme-toggle:hover{background:rgba(55,12,60,.85)}
-.hero .eyebrow::before{content:""; width:28px; height:2px; background:currentColor; box-shadow:0 5px 0 #c88b50}
-.hero h1{position:relative; z-index:1; margin:0; font-size:clamp(30px,5vw,44px); line-height:1; letter-spacing:-.045em; color:#fff8fb}
-.hero p{position:relative; z-index:1; margin:10px 0 0; color:#f3dceb; font-size:15px}
-/* ---- tabs ---- */
-#tabs{
-  position:sticky; top:52px; z-index:50;
-  display:grid; grid-template-columns:repeat(4,1fr); gap:7px;
-  width:min(860px,calc(100% - 24px)); margin:14px auto 18px; padding:7px;
-  background:var(--surface); border:1px solid var(--line); border-bottom:4px solid var(--leather);
-  border-radius:0 0 19px 19px; box-shadow:0 10px 30px rgba(74,25,76,.10);
-}
-#tabs button{
-  min-height:46px; padding:9px 6px; border:0; border-radius:8px 8px 13px 13px;
-  background:transparent; color:var(--muted); font-weight:800; font-size:13px;
-  cursor:pointer; white-space:nowrap;
-}
-#tabs button.active{background:var(--deep); color:var(--deep-ink); box-shadow:inset 0 -3px 0 var(--leather)}
-main{max-width:860px; margin:0 auto; padding:12px 12px 60px}
-.tabpanel[hidden]{display:none}
-/* ---- cards & rows ---- */
-.card{
-  position:relative; overflow:hidden;
-  background:var(--surface); border:1px solid var(--line); border-bottom:5px solid var(--leather);
-  border-radius:12px 20px 20px 20px; box-shadow:var(--shadow);
-  padding:27px 18px 16px; margin:0 0 18px;
-}
-.card::before{
-  content:""; height:13px; position:absolute; left:0; right:0; top:0;
-  background:repeating-linear-gradient(90deg,var(--sara) 0 18px,var(--cream) 18px 25px,var(--mike) 25px 43px,var(--cream) 43px 50px,var(--leather) 50px 59px);
-}
-.card h2{
-  margin:-27px -18px 12px; padding:19px 20px 14px;
-  font-size:17px; letter-spacing:-.02em; color:var(--ink);
-  border-bottom:1px dashed var(--line);
-  background-image:linear-gradient(135deg,transparent 84%,color-mix(in srgb,var(--sara) 13%,transparent) 84% 88%,transparent 88%),linear-gradient(45deg,transparent 84%,color-mix(in srgb,var(--mike) 12%,transparent) 84% 88%,transparent 88%);
-  background-size:34px 34px;
-}
-.card h3{margin:14px 0 8px; font-size:15px; color:var(--ink)}
-.row{
-  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
-  padding:11px 2px; border-bottom:1px solid var(--line); width:100%;
-}
-.row:last-child{border-bottom:none}
-.row .grow{flex:1 1 140px; min-width:120px}
-label.fld{display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:800; color:var(--muted)}
-input[type=text],input[type=number],select{
-  font-size:15px; padding:7px 9px; border:1px solid var(--line); border-radius:8px;
-  background:var(--surface); color:var(--ink); max-width:100%; outline:none;
-}
-input:focus,select:focus{border-color:var(--sara); box-shadow:0 0 0 3px color-mix(in srgb,var(--sara) 18%,transparent)}
-input[type=number]{width:96px; font-family:"DM Mono",monospace}
-input[type=checkbox]{width:20px; height:20px; accent-color:var(--sara)}
-input[type=range]{
-  -webkit-appearance:none; appearance:none; width:100%; height:8px; padding:0;
-  border:0; background:var(--line); border-radius:99px; cursor:pointer;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none; appearance:none; width:24px; height:24px; border-radius:50%;
-  background:var(--sara); border:4px solid var(--surface); box-shadow:0 2px 8px rgba(0,0,0,.25); cursor:pointer;
-}
-input[type=range]::-moz-range-thumb{
-  width:16px; height:16px; border-radius:50%;
-  background:var(--sara); border:4px solid var(--surface); box-shadow:0 2px 8px rgba(0,0,0,.25); cursor:pointer;
-}
-button{font-family:inherit}
-.btn{
-  background:var(--sara); color:var(--sara-ink); border:0;
-  border-bottom:3px solid color-mix(in srgb,var(--leather) 55%,transparent);
-  border-radius:9px; padding:10px 16px; font-size:14px; font-weight:800; cursor:pointer;
-}
-.btn.secondary{background:var(--deep); color:var(--deep-ink); border-bottom:3px solid var(--leather)}
-.btn.plain{background:var(--surface); color:var(--ink); border:1px solid var(--line); border-bottom:3px solid var(--leather)}
-.btn.danger{background:var(--sara); color:var(--sara-ink); border-bottom:3px solid color-mix(in srgb,var(--leather) 65%,transparent)}
-.btn.small{padding:6px 12px; font-size:13px}
-.iconbtn{
-  background:none; border:none; font-size:18px; cursor:pointer; color:var(--muted);
-  padding:4px 8px; line-height:1; border-radius:8px;
-}
-.iconbtn:hover{background:var(--sara-soft); color:var(--sara)}
-/* owner tags */
-.tag{
-  display:inline-block; font-size:11px; font-weight:800; letter-spacing:.4px;
-  padding:4px 10px; border-radius:20px; text-transform:uppercase;
-}
-.tag.Mike{background:var(--mike); color:var(--mike-ink)}
-.tag.Sara{background:var(--sara); color:var(--sara-ink)}
-.tag.Shared{background:var(--shared); color:var(--shared-ink)}
-.chips{display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 8px}
-.chips button{
-  border:0; background:transparent; border-radius:9px;
-  padding:8px 14px; font-size:13px; font-weight:800; color:var(--muted); cursor:pointer;
-}
-.chips button.active{background:var(--deep); color:var(--deep-ink); box-shadow:inset 0 -3px 0 var(--leather)}
-.money{font-family:"DM Mono",monospace; font-weight:500; font-variant-numeric:tabular-nums}
-.big{font-size:clamp(34px,7vw,52px); letter-spacing:-.04em}
-.muted{color:var(--muted); font-size:13px}
-.ok{color:var(--mike); font-weight:700}
-.warn{color:var(--shared); font-weight:700}
-.bad{color:var(--danger); font-weight:700}
-.progress{height:12px; background:var(--surface-2); border-radius:8px; overflow:hidden; margin-top:8px}
-.progress > div{height:100%; background:linear-gradient(90deg,var(--sara),var(--mike)); border-radius:8px}
-/* pot + snapshots */
-.grid2{display:grid; grid-template-columns:1fr; gap:12px}
-.snap{border:1px solid var(--line); border-left:6px solid var(--shared); padding:12px 14px; background:var(--surface-2); border-radius:10px}
-.snap.Mike{border-left-color:var(--mike)}
-.snap.Sara{border-left-color:var(--sara)}
-.snap .kv{display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:3px 0}
-/* calendar */
-.cal-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px}
-.cal-head h2{margin:0; padding:0; border:0; background:none; font-size:20px; letter-spacing:-.02em}
-.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
-.cal-dow{font-size:10px; font-weight:800; color:var(--muted); text-align:center; padding:6px 0; text-transform:uppercase; letter-spacing:.06em}
-.cell{
-  min-height:52px; border:1px solid var(--line); border-radius:10px; background:var(--surface);
-  font-size:14px; font-family:"DM Mono",monospace; cursor:pointer;
-  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-  padding:6px 2px; color:var(--ink); position:relative;
-}
-.cell.blank{background:transparent; border-color:transparent; cursor:default}
-.cell.today{box-shadow:inset 0 0 0 2px var(--sara)}
-.cell.today .dnum{color:var(--sara); font-weight:700}
-.cell .dnum{font-weight:500}
-.cell .dots{display:none; gap:3px; margin-top:4px; flex-wrap:wrap; justify-content:center}
-.cell .dot{width:7px; height:7px; border-radius:50%}
-.dot.Mike{background:var(--mike)} .dot.Sara{background:var(--sara)} .dot.Shared{background:var(--shared)}
-/* overlays */
-.overlay{
-  position:fixed; inset:0; z-index:80; background:rgba(20,10,18,.62);
-  display:flex; align-items:center; justify-content:center; padding:18px;
-}
-.overlay[hidden]{display:none}
-.modal,.popup{
-  background:var(--surface); border:1px solid var(--line); border-bottom:5px solid var(--sara);
-  border-radius:16px 16px 22px 22px; box-shadow:0 24px 80px rgba(24,12,20,.44);
-  padding:22px; max-width:430px; width:100%; max-height:85vh; overflow:auto;
-}
-.modal p{font-size:15px; margin:0 0 18px; color:var(--ink)}
-.modal-actions{display:flex; gap:9px; justify-content:flex-end}
-.popup{position:relative}
-.popup h3{margin:0 0 12px; color:var(--ink); font-size:18px; padding-right:30px}
-#day-close{
-  position:absolute; top:10px; right:12px; width:36px; height:36px; padding:0;
-  border:1px solid var(--line); border-radius:50%; background:var(--surface-2);
-  color:var(--ink); font-size:20px; line-height:1; cursor:pointer;
-}
-.day-item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px}
-.day-item:last-child{border:none}
-/* add forms */
-.addform{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line)}
-.flash{
-  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:90;
-  background:var(--ink); color:var(--surface); padding:12px 18px; border-radius:10px;
-  font-size:13px; font-weight:700; box-shadow:var(--shadow);
-}
-@media (min-width:720px){
-  .grid2{grid-template-columns:1fr 1fr}
-  .cell{min-height:68px}
-  .cell .dots{display:flex}
-}
-@media (max-width:560px){
-  .hero{margin-top:10px; padding:24px 20px; border-radius:20px 20px 10px 10px}
-  #tabs{gap:4px; padding:5px}
-  #tabs button{min-height:44px; font-size:12px; padding:7px 4px}
-  .card{padding:25px 14px 14px}
-  .card h2{margin:-25px -14px 10px; padding:16px 14px 12px}
-  .cal-grid{gap:3px}
-  .cell{min-height:46px}
-}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Household Budget</title>
+  <meta name="title" content="Budget" />
+  <meta itemprop="name" content="Budget" />
+  <meta name="application-name" content="Budget" />
+  <meta name="apple-mobile-web-app-title" content="Budget" />
+  <meta property="og:title" content="Budget" />
+  <meta name="og:title" content="Budget" />
+  <meta property="og:site_name" content="Budget" />
+  <meta name="twitter:title" content="Budget" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7efe5; --surface: #fffaf3; --surface-2: #f2e3d1; --ink: #35163d; --muted: #735b70;
+      --line: #d9b995; --deep: #5a195e; --deep-ink: #fff8fb; --lime: #f4bfd5; --lime-ink: #53113d; --coral: #ef218c;
+      --mike: #753c94; --mike-soft: #eadcf3; --mike-ink: #fff; --sara: #e91e8d; --sara-soft: #ffe0ee; --sara-ink: #160b17;
+      --shared: #b66b32; --shared-soft: #f2dfc7; --shared-ink: #160b17; --leather: #b66b32; --cream: #fff5e8;
+      --shadow: 0 20px 54px rgba(74,25,76,.14);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1d111e; --surface: #2b182d; --surface-2: #38223a; --ink: #fff4f8; --muted: #d5b9cd;
+        --line: #684561; --deep: #f0cbe9; --deep-ink: #35163d; --lime: #e995b9; --lime-ink: #3b0d2d; --coral: #ff58aa;
+        --mike: #c18be0; --mike-soft: #472756; --mike-ink: #160b17; --sara: #ff64b2; --sara-soft: #54223d; --sara-ink: #35163d;
+        --shared: #d79a64; --shared-soft: #503a29; --shared-ink: #160b17; --leather: #d79a64; --cream: #fff0e2;
+        --shadow: 0 24px 70px rgba(0,0,0,.38);
+      }
+    }
+    /* manual theme override (header toggle; per-device) */
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #1d111e; --surface: #2b182d; --surface-2: #38223a; --ink: #fff4f8; --muted: #d5b9cd;
+      --line: #684561; --deep: #f0cbe9; --deep-ink: #35163d; --lime: #e995b9; --lime-ink: #3b0d2d; --coral: #ff58aa;
+      --mike: #c18be0; --mike-soft: #472756; --mike-ink: #160b17; --sara: #ff64b2; --sara-soft: #54223d; --sara-ink: #35163d;
+      --shared: #d79a64; --shared-soft: #503a29; --shared-ink: #160b17; --leather: #d79a64; --cream: #fff0e2;
+      --shadow: 0 24px 70px rgba(0,0,0,.38);
+    }
+    html[data-theme="dark"] .expected-status.overdue { color: #ff9b8d; }
+    html[data-theme="dark"] .responsibility { background: #5a195e; color: #fff8fb; }
+    html[data-theme="dark"] .owner-total { border-color: rgba(16,35,29,.18); }
+    html[data-theme="dark"] .due-flag.overdue { background: #5a2925; color: #ffb0a5; }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f7efe5; --surface: #fffaf3; --surface-2: #f2e3d1; --ink: #35163d; --muted: #735b70;
+      --line: #d9b995; --deep: #5a195e; --deep-ink: #fff8fb; --lime: #f4bfd5; --lime-ink: #53113d; --coral: #ef218c;
+      --mike: #753c94; --mike-soft: #eadcf3; --mike-ink: #fff; --sara: #e91e8d; --sara-soft: #ffe0ee; --sara-ink: #160b17;
+      --shared: #b66b32; --shared-soft: #f2dfc7; --shared-ink: #160b17; --leather: #b66b32; --cream: #fff5e8;
+      --shadow: 0 20px 54px rgba(74,25,76,.14);
+    }
+    .theme-toggle { position: absolute; top: 14px; right: 14px; z-index: 5; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,245,232,.4); background: rgba(55,12,60,.55); color: #fff8fb; font-size: 19px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .theme-toggle:hover { background: rgba(55,12,60,.85); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; background-color: var(--bg); background-image: linear-gradient(45deg, transparent 46%, color-mix(in srgb, var(--shared) 8%, transparent) 46% 54%, transparent 54%), linear-gradient(-45deg, transparent 46%, color-mix(in srgb, var(--sara) 7%, transparent) 46% 54%, transparent 54%); background-size: 34px 34px; color: var(--ink); font-family: "Manrope", sans-serif; line-height: 1.45; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .hero { margin: 18px auto 0; padding: 34px 42px; position: relative; overflow: hidden; border-radius: 26px 26px 12px 12px; border-bottom: 10px solid var(--leather); color: #fff8fb; background: linear-gradient(112deg, rgba(67,16,75,.98) 0 48%, rgba(114,28,117,.93) 72%, rgba(232,30,141,.88)), #5a195e; box-shadow: var(--shadow); }
+    .hero::before { content: ""; position: absolute; inset: 0; opacity: .26; background-image: linear-gradient(45deg, transparent 42%, #fff5e8 42% 48%, transparent 48% 52%, #ef218c 52% 58%, transparent 58%), linear-gradient(-45deg, transparent 42%, #fff5e8 42% 48%, transparent 48% 52%, #9d4db5 52% 58%, transparent 58%); background-size: 74px 74px; background-position: right -8px top -8px; mask-image: linear-gradient(90deg, transparent 30%, #000 78%); pointer-events: none; }
+    .hero::after { content: ""; position: absolute; right: 4%; bottom: -112px; width: 240px; height: 240px; border: 24px solid rgba(255,245,232,.10); border-top-color: transparent; border-radius: 50%; transform: rotate(4deg); pointer-events: none; }
+    .hero-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 42px; align-items: end; position: relative; z-index: 1; }
+    .eyebrow { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #ffb4d7; }
+    .eyebrow::before { content: ""; width: 28px; height: 2px; background: currentColor; box-shadow: 0 5px 0 #c88b50; }
+    h1 { margin: 10px 0 10px; max-width: 700px; font-size: clamp(32px, 4.4vw, 54px); line-height: 1; letter-spacing: -.045em; }
+    .hero p { max-width: 650px; margin: 0; color: #f3dceb; font-size: 17px; }
+    .session-note { align-self: end; display: grid; gap: 16px; padding: 20px; color: #f3dceb; font-size: 13px; background: rgba(55,12,60,.62); border: 1px solid rgba(255,245,232,.30); border-bottom: 4px solid #c88b50; border-radius: 10px 18px 10px 18px; }
+    .session-note strong { color: #fff; display: block; margin-bottom: 4px; }
+    .date-block { padding-bottom: 16px; border-bottom: 1px dashed rgba(255,245,232,.34); }
+    .date-block .note-label { display: block; margin-bottom: 3px; color: #ffb4d7; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .date-block strong { font: 500 19px/1.2 "DM Mono", monospace; letter-spacing: -.03em; }
+    .expected-line { display: grid; grid-template-columns: 105px minmax(0, 1fr); align-items: end; gap: 5px 8px; margin-top: 8px; color: var(--muted); }
+    .expected-line .date-field { min-width: 0; }
+    .expected-line label { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 800; }
+    .expected-line input, .expected-line select { min-height: 36px; padding: 6px 8px; font: 500 11px "DM Mono", monospace; }
+    .expected-status { grid-column: 1 / -1; min-height: 15px; font-size: 10px; font-style: normal; font-weight: 800; }
+    .expected-status.soon { color: var(--sara); }
+    .expected-status.overdue { color: #a53626; }
+    @media (prefers-color-scheme: dark) { .expected-status.overdue { color: #ff9b8d; } }
+    .tab-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 14px 0 18px; padding: 7px; position: sticky; top: 8px; z-index: 30; background: var(--surface); border: 1px solid var(--line); border-bottom: 4px solid var(--leather); border-radius: 13px 13px 19px 19px; box-shadow: 0 10px 30px rgba(74,25,76,.10); }
+    .tab-btn { min-height: 46px; padding: 9px 14px; border: 0; border-radius: 8px 8px 13px 13px; cursor: pointer; background: transparent; color: var(--muted); font-weight: 800; }
+    .tab-btn[aria-selected="true"] { background: var(--deep); color: var(--deep-ink); box-shadow: inset 0 -3px 0 var(--leather); }
+    .tab-panel[hidden] { display: none; }
+    .control-rail { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 18px; padding: 12px 14px 12px 18px; background: var(--surface); border: 1px solid var(--line); border-bottom: 4px solid var(--leather); border-radius: 12px 12px 20px 20px; box-shadow: 0 10px 30px rgba(74,25,76,.08); }
+    .filter-label { font-size: 13px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn, .ghost-btn, .solid-btn, .add-btn, .quick-btn { border: 0; cursor: pointer; min-height: 40px; border-radius: 9px; font-weight: 800; }
+    .filter-btn { padding: 8px 14px; background: transparent; color: var(--muted); }
+    .filter-btn.active { background: var(--ink); color: var(--surface); box-shadow: inset 0 -3px 0 var(--leather); }
+    .filter-btn[data-filter="Mike"].active { background: var(--mike); color: var(--mike-ink); }
+    .filter-btn[data-filter="Sara"].active { background: var(--sara); color: var(--sara-ink); }
+    .filter-btn[data-filter="Shared"].active { background: var(--shared); color: var(--shared-ink); }
+    .dashboard { display: grid; grid-template-columns: 1.3fr .7fr; gap: 18px; margin-bottom: 18px; }
+    .spark-card { background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--leather); border-radius: 20px 10px 20px 20px; padding: 34px 28px 28px; position: relative; overflow: hidden; }
+    .spark-card::before { content: ""; height: 13px; position: absolute; left: 0; right: 0; top: 0; background: repeating-linear-gradient(90deg, var(--sara) 0 18px, var(--cream) 18px 25px, var(--mike) 25px 43px, var(--cream) 43px 50px, var(--leather) 50px 59px); }
+    .card-kicker { color: var(--sara); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 800; }
+    .spark-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .target { margin: 4px 0 0; font: 500 clamp(42px, 7vw, 74px)/1 "DM Mono", monospace; letter-spacing: -.06em; }
+    .target small { font: 700 15px/1.2 "Manrope", sans-serif; letter-spacing: 0; color: var(--muted); }
+    .spark-explain { color: var(--muted); font-size: 14px; max-width: 520px; margin: 12px 0 22px; }
+    .spark-check { min-width: 210px; padding: 16px; background: var(--surface-2); border-radius: 14px; }
+    .spark-check label { font-size: 12px; font-weight: 800; color: var(--muted); display: block; margin-bottom: 6px; }
+    .money-input { position: relative; }
+    .money-input span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-family: "DM Mono"; }
+    .money-input input { padding-left: 28px; }
+    .status-line { margin-top: 8px; font-size: 12px; font-weight: 800; min-height: 18px; }
+    .status-line.good { color: var(--mike); } .status-line.short { color: var(--sara); }
+    .mini-settings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .field label { display: block; color: var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 5px; }
+    input, select { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 8px 10px; outline: none; }
+    input:focus, select:focus { border-color: var(--sara); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sara) 18%, transparent); }
+    input[type="number"] { font-family: "DM Mono", monospace; }
+    .responsibility { background: var(--deep); color: #fff8fb; border-radius: 10px 20px 20px 20px; border-bottom: 5px solid var(--leather); padding: 26px; position: relative; overflow: hidden; }
+    .responsibility::after { content: ""; position: absolute; width: 88px; height: 88px; right: -38px; top: -38px; border: 10px solid rgba(255,245,232,.14); border-top-color: transparent; border-radius: 50%; transform: rotate(24deg); }
+    @media (prefers-color-scheme: dark) { .responsibility { background: #5a195e; color: #fff8fb; } }
+    .responsibility h2 { margin: 0 0 18px; font-size: 17px; }
+    .owner-total { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+    @media (prefers-color-scheme: dark) { .owner-total { border-color: rgba(16,35,29,.18); } }
+    .owner-total:last-of-type { border: 0; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--owner-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--owner-color) 20%, transparent); }
+    .owner-total span { font-size: 13px; } .owner-total strong { font: 500 19px "DM Mono", monospace; }
+    .shared-note { margin: 16px 0 0; font-size: 11px; opacity: .75; }
+    .metric-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-bottom: 4px solid var(--leather); border-radius: 16px; overflow: hidden; margin-bottom: 18px; }
+    .metric { padding: 18px 20px; background: var(--surface); }
+    .metric span { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .metric strong { display: block; margin-top: 4px; font: 500 23px "DM Mono", monospace; }
+    .metric strong.negative { color: var(--sara); }
+    .household-pot { display: grid; grid-template-columns: minmax(180px, .75fr) repeat(3, 1fr); gap: 1px; margin-bottom: 18px; overflow: hidden; background: var(--line); border: 1px solid var(--line); border-bottom: 5px solid var(--shared); border-radius: 12px 20px 20px 20px; }
+    .pot-heading, .pot-stat { padding: 18px 20px; background: var(--surface); }
+    .pot-heading h2 { margin: 0; font-size: 18px; }
+    .pot-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .pot-stat span { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .pot-stat strong { display: block; margin-top: 4px; font: 500 21px "DM Mono", monospace; }
+    .pot-stat strong.surplus { color: var(--mike); }
+    .pot-stat strong.shortfall { color: var(--sara); }
+    .upcoming-card { margin-bottom: 18px; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--leather); border-radius: 12px 20px 20px 20px; overflow: hidden; }
+    .upcoming-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 20px 22px; border-bottom: 1px dashed var(--line); background-image: linear-gradient(135deg, transparent 84%, color-mix(in srgb, var(--shared) 15%, transparent) 84% 88%, transparent 88%); background-size: 34px 34px; }
+    .upcoming-head h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
+    .upcoming-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .upcoming-head button { border: 0; background: transparent; color: var(--deep); cursor: pointer; font-size: 12px; font-weight: 800; }
+    .upcoming-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+    .upcoming-sort, .list-sort { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; }
+    .upcoming-sort button, .list-sort button { min-height: 32px; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 800; }
+    .upcoming-sort button[aria-pressed="true"], .list-sort button[aria-pressed="true"] { background: var(--ink); color: var(--surface); box-shadow: inset 0 -2px 0 var(--leather); }
+    .upcoming-filterbar, .bill-list-controls { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; padding: 12px 18px; border-bottom: 1px dashed var(--line); background: color-mix(in srgb, var(--surface-2) 48%, var(--surface)); }
+    .compact-field { min-width: 130px; flex: 1 1 130px; }
+    .compact-field label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .compact-field select { min-height: 36px; padding: 6px 28px 6px 9px; font-size: 11px; font-weight: 700; }
+    .bill-list-controls { margin: -4px 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-bottom: 4px solid var(--leather); border-radius: 10px 10px 18px 18px; background: var(--surface); box-shadow: 0 10px 30px rgba(74,25,76,.06); }
+    .bill-list-controls .filter-label { margin-right: auto; }
+    .bill-list-controls .compact-field { flex: 0 1 150px; }
+    .upcoming-list { padding: 0 18px; }
+    .upcoming-owner-group { padding-top: 4px; }
+    .upcoming-owner-group + .upcoming-owner-group { border-top: 1px dashed var(--line); }
+    .upcoming-owner-heading { display: flex; align-items: center; gap: 9px; padding: 12px 4px 6px; color: var(--owner-color); font-size: 11px; font-weight: 800; }
+    .upcoming-owner-heading::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--owner-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--owner-color) 18%, transparent); }
+    .upcoming-row, .paid-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--line); }
+    .upcoming-row:last-child, .paid-row:last-child { border-bottom: 0; }
+    .upcoming-date { font: 500 12px "DM Mono", monospace; color: var(--muted); }
+    .upcoming-name { min-width: 0; padding-left: 10px; border-left: 4px solid var(--owner-color); }
+    .upcoming-name strong { display: block; font-size: 13px; }
+    .upcoming-name span { color: var(--muted); font-size: 11px; }
+    .upcoming-amount { font: 500 12px "DM Mono", monospace; }
+    .due-flag { padding: 5px 8px; border-radius: 7px; background: var(--surface-2); color: var(--muted); font-size: 10px; font-weight: 800; white-space: nowrap; }
+    .due-flag.soon { background: var(--sara-soft); color: var(--sara); }
+    .due-flag.overdue { background: #f6d8d1; color: #8d2c20; }
+    @media (prefers-color-scheme: dark) { .due-flag.overdue { background: #5a2925; color: #ffb0a5; } }
+    .upcoming-empty, .upcoming-unknown { padding: 16px 22px; color: var(--muted); font-size: 12px; }
+    .upcoming-unknown { border-top: 1px dashed var(--line); background: var(--surface-2); }
+    .paid-card { margin-bottom: 18px; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--mike); border-radius: 20px 12px 20px 20px; overflow: hidden; }
+    .paid-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px dashed var(--line); background: var(--mike-soft); }
+    .paid-head h2 { margin: 0; font-size: 18px; letter-spacing: -.025em; }
+    .paid-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .paid-count { color: var(--mike); font: 500 13px "DM Mono", monospace; }
+    .paid-list { padding: 0 18px; }
+    .paid-check { color: var(--mike); font-size: 11px; font-weight: 800; }
+    .paid-action, .paid-toggle { min-height: 34px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); cursor: pointer; font-size: 10px; font-weight: 800; white-space: nowrap; }
+    .paid-action:hover, .paid-toggle:hover { border-color: var(--mike); }
+    .paid-toggle { grid-column: 1 / -1; justify-self: start; }
+    .paid-toggle[aria-pressed="true"] { background: var(--mike-soft); border-color: var(--mike); color: var(--mike); }
+    .link-save-status { display: block; margin-top: 7px; color: #ffb4d7; font-size: 11px; font-weight: 800; }
+    .planner { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    .section { background: var(--surface); border: 1px solid var(--line); border-bottom: 4px solid var(--leather); border-radius: 12px 20px 20px 20px; overflow: hidden; }
+    .section.wide { grid-column: 1 / -1; }
+    #panel-spending .section:not(.wide) .item-row { grid-template-columns: minmax(150px, 1.35fr) minmax(78px, .65fr) minmax(92px, .72fr) minmax(92px, .72fr) 64px 34px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px 22px; border-bottom: 1px dashed var(--line); background-image: linear-gradient(135deg, transparent 84%, color-mix(in srgb, var(--sara) 13%, transparent) 84% 88%, transparent 88%), linear-gradient(45deg, transparent 84%, color-mix(in srgb, var(--mike) 12%, transparent) 84% 88%, transparent 88%); background-size: 34px 34px; }
+    .section-head h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .section-head p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+    .add-btn { padding: 9px 12px; background: var(--sara); color: var(--sara-ink); white-space: nowrap; box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--leather) 55%, transparent); }
+    .item-list { padding: 0 14px 14px; }
+    .item-row { display: grid; grid-template-columns: minmax(150px, 1.5fr) minmax(90px, .65fr) minmax(105px, .7fr) minmax(105px, .7fr) 72px 34px; gap: 8px; align-items: end; padding: 14px 2px; border-bottom: 1px solid var(--line); }
+    .item-row.income-row, .item-row.transfer-row { grid-template-columns: minmax(170px, 1.6fr) minmax(100px, .65fr) minmax(150px, .8fr) 34px; }
+    .transfer-flow { min-height: 42px; display: flex; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); font-size: 12px; font-weight: 800; }
+    .transfer-flow::before { content: ""; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--mike); box-shadow: 16px 0 0 var(--sara); }
+    .item-row:last-child { border-bottom: 0; } .item-row[hidden] { display: none; }
+    .item-row .field label { font-size: 10px; }
+    .owner-select-wrap { position: relative; }
+    .owner-select-wrap::before { content: ""; width: 8px; height: 8px; border-radius: 50%; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: var(--owner-color); z-index: 1; }
+    .owner-select-wrap select { padding-left: 25px; font-weight: 800; font-size: 12px; background: var(--owner-soft); border-color: transparent; }
+    .split-field { transition: opacity .2s; } .split-field.disabled { opacity: .28; pointer-events: none; }
+    .remove-btn { width: 34px; height: 42px; border: 0; background: transparent; color: var(--muted); border-radius: 8px; cursor: pointer; font-size: 20px; }
+    .remove-btn:hover { background: var(--sara-soft); color: var(--sara); }
+    .empty { padding: 24px 10px 10px; color: var(--muted); font-size: 13px; text-align: center; }
+    .extra-box { padding: 22px; }
+    .personal-spending-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .personal-spending { padding: 18px; background: var(--surface-2); border-radius: 14px; border-top: 5px solid var(--person-color); }
+    .personal-spending p { margin: 5px 0 14px; color: var(--muted); font-size: 12px; }
+    .slider-label { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 10px; }
+    .slider-label span { font-weight: 800; }
+    .slider-label strong { color: var(--person-color); font: 500 28px "DM Mono", monospace; }
+    input[type="range"] { appearance: none; min-height: 8px; height: 8px; padding: 0; border: 0; background: var(--line); border-radius: 99px; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--person-color, var(--coral)); border: 4px solid var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+    .quick-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .quick-btn { padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); font-family: "DM Mono"; font-size: 12px; }
+    .item-row.savings-row { grid-template-columns: minmax(150px, 1.4fr) minmax(105px, .72fr) minmax(100px, .7fr) minmax(105px, .72fr) minmax(105px, .72fr) 34px; }
+    .savings-progress { margin-top: 7px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .calendar-shell { background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--leather); border-radius: 12px 20px 20px 20px; overflow: hidden; }
+    .calendar-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 22px; border-bottom: 1px dashed var(--line); }
+    .calendar-head h2 { margin: 0; font-size: 21px; letter-spacing: -.03em; }
+    .calendar-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .calendar-controls { display: flex; gap: 6px; }
+    .calendar-controls button { min-width: 42px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); cursor: pointer; font-weight: 800; }
+    .calendar-controls .today-btn { min-width: auto; }
+    .calendar-weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .calendar-weekdays { padding: 12px 14px 0; }
+    .calendar-weekdays span { padding: 7px; color: var(--muted); font-size: 10px; font-weight: 800; text-align: center; text-transform: uppercase; }
+    .calendar-grid { margin: 0 14px 14px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .calendar-day { min-height: 114px; padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+    .calendar-day.outside { background: var(--surface-2); }
+    .calendar-day.today { box-shadow: inset 0 0 0 2px var(--sara); }
+    .day-number { display: block; margin-bottom: 6px; color: var(--muted); font: 500 12px "DM Mono", monospace; }
+    .calendar-day.today .day-number { color: var(--sara); font-weight: 800; }
+    .calendar-event { display: block; margin: 0 0 5px; padding: 6px 7px; border-radius: 7px; background: var(--owner-soft); color: var(--ink); border-left: 4px solid var(--owner-color); font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
+    .calendar-event strong { display: block; color: var(--ink); font-size: 10px; }
+    .calendar-event span { color: var(--muted); font-family: "DM Mono", monospace; }
+    .calendar-agenda { display: none; padding: 0 14px 14px; }
+    .mobile-day-detail { display: none; }
+    .day-detail-card { width: min(100% - 28px, 420px); max-height: min(78vh, 620px); overflow-y: auto; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--leather); border-radius: 16px; box-shadow: 0 22px 70px rgba(24, 12, 20, .38); }
+    .day-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .day-detail-head h3 { margin: 0; font-size: 17px; }
+    .day-detail-close { width: 38px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface-2); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
+    .mobile-day-detail p { margin: 0; color: var(--muted); font-size: 12px; }
+    .agenda-title { margin: 0 0 8px; font-size: 14px; }
+    .agenda-row { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .agenda-row:last-child { border-bottom: 0; }
+    .agenda-date { color: var(--muted); font: 500 11px "DM Mono", monospace; }
+    .agenda-label { min-width: 0; padding-left: 9px; border-left: 4px solid var(--owner-color); font-size: 12px; font-weight: 700; }
+    .agenda-amount { font: 500 11px "DM Mono", monospace; }
+    .calendar-empty { padding: 18px 22px 24px; color: var(--muted); font-size: 13px; }
+    .calendar-unknown { margin: 0 14px 14px; padding: 14px 16px; background: var(--surface-2); border-radius: 10px; color: var(--muted); font-size: 12px; }
+    .calendar-unknown strong { color: var(--ink); }
+    .calendar-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0 22px 18px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .legend-item i { width: 10px; height: 10px; border-radius: 50%; background: var(--owner-color); }
+    .footer-actions { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 22px 0 50px; }
+    .footer-actions p { color: var(--muted); font-size: 12px; margin: 0; }
+    .action-row { display: flex; gap: 8px; }
+    .ghost-btn, .solid-btn { padding: 10px 16px; } .ghost-btn { background: var(--surface); border: 1px solid var(--line); border-bottom: 3px solid var(--leather); } .solid-btn { background: var(--deep); color: var(--deep-ink); border-bottom: 3px solid var(--leather); }
+    .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px); background: var(--ink); color: var(--surface); padding: 12px 16px; border-radius: 9px; opacity: 0; pointer-events: none; transition: .2s; z-index: 50; font-size: 13px; font-weight: 700; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .confirm-backdrop { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(20, 10, 18, .62); }
+    .confirm-backdrop[hidden] { display: none; }
+    .confirm-dialog { width: min(100%, 430px); padding: 22px; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--sara); border-radius: 16px 16px 22px 22px; box-shadow: 0 24px 80px rgba(24, 12, 20, .44); }
+    .confirm-dialog h2 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.025em; }
+    .confirm-dialog p { margin: 0; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+    .confirm-cancel, .confirm-delete { min-height: 42px; padding: 9px 16px; border-radius: 9px; cursor: pointer; font-weight: 800; }
+    .confirm-cancel { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); }
+    .confirm-delete { border: 0; border-bottom: 3px solid color-mix(in srgb, var(--leather) 65%, transparent); background: var(--sara); color: var(--sara-ink); }
+    .confirm-cancel:focus-visible, .confirm-delete:focus-visible { outline: 3px solid color-mix(in srgb, var(--sara) 35%, transparent); outline-offset: 2px; }
+    @media (max-width: 840px) {
+      .wrap { width: min(100% - 24px, 680px); } .hero { padding: 34px 28px; } .hero-grid, .dashboard, .planner { grid-template-columns: 1fr; }
+      .session-note { max-width: 440px; } .section.wide { grid-column: auto; } .spark-top { flex-direction: column; } .spark-check { width: 100%; }
+      .personal-spending-grid { grid-template-columns: 1fr; } .control-rail { align-items: flex-start; flex-direction: column; }
+      .filter-group { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); } .filter-btn { padding: 8px 5px; }
+      .bill-list-controls { align-items: flex-start; } .bill-list-controls .filter-label { width: 100%; } .bill-list-controls .compact-field { flex: 1 1 130px; }
+    }
+    @media (max-width: 560px) {
+      .wrap { width: calc(100% - 16px); } .hero { margin-top: 8px; padding: 26px 20px; border-radius: 20px 20px 10px 10px; } .hero p { font-size: 15px; } .session-note { padding: 16px; } .tab-nav { top: 4px; gap: 4px; padding: 5px; } .tab-btn { min-height: 44px; padding: 7px 5px; font-size: 12px; }
+      .mini-settings { grid-template-columns: 1fr; } .metric-strip, .household-pot { grid-template-columns: 1fr; } .spark-card, .responsibility { padding: 22px 20px; }
+      .upcoming-head, .paid-head { align-items: flex-start; padding: 17px 16px; } .upcoming-head { flex-direction: column; } .upcoming-tools { width: 100%; justify-content: space-between; } .upcoming-sort { order: 2; width: 100%; } .upcoming-sort button { flex: 1; } .upcoming-filterbar { padding: 12px; } .compact-field { min-width: calc(50% - 5px); } .upcoming-list, .paid-list { padding: 0 12px; } .upcoming-row, .paid-row { grid-template-columns: 70px minmax(0, 1fr) auto; gap: 8px; } .upcoming-amount { grid-column: 2; } .due-flag { grid-column: 3; grid-row: 1; } .upcoming-row .paid-action { grid-column: 3; grid-row: 2; } .paid-row .paid-action { grid-column: 3; grid-row: 1 / span 2; } .paid-count { display: none; }
+      .section-head { padding: 17px 16px; } .section-head p { max-width: 220px; } .item-list { padding: 0 12px 12px; }
+      .item-row, .item-row.income-row, .item-row.transfer-row, .item-row.savings-row, #panel-spending .section:not(.wide) .item-row { grid-template-columns: 1fr 1fr; gap: 10px 8px; padding: 16px 0; } .item-row .name-field { grid-column: 1 / -1; }
+      .transfer-flow { grid-column: 1 / -1; }
+      .item-row .remove-btn { grid-column: 2; justify-self: end; height: 34px; } .extra-box { padding: 18px 16px; }
+      .calendar-head { align-items: flex-start; padding: 17px 16px; } .calendar-head h2 { font-size: 18px; } .calendar-controls button { min-width: 38px; min-height: 38px; padding: 6px 9px; } .calendar-controls .today-btn { display: none; }
+      .calendar-weekdays { padding: 10px 8px 0; } .calendar-weekdays span { padding: 5px 1px; font-size: 9px; } .calendar-grid { margin: 0 8px 12px; }
+      .calendar-day { min-height: 50px; padding: 5px; cursor: pointer; text-align: center; display: grid; place-items: center; } .calendar-day.selected { box-shadow: inset 0 0 0 2px var(--deep); } .calendar-event { display: none; }
+      .day-number { margin: 0; text-align: center; font-size: 11px; } .calendar-agenda { display: none; } .mobile-day-detail.open { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 10, 18, .58); } .agenda-row { grid-template-columns: 1fr auto; } .agenda-date { display: none; } .agenda-amount { grid-column: auto; }
+      .footer-actions { align-items: stretch; flex-direction: column; } .action-row { display: grid; grid-template-columns: 1fr 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  </style>
 </head>
 <body>
-<div id="savebar">
-  <span id="save-indicator" class="saving">Loading…</span>
-  <button id="reset-btn" type="button">Reset to defaults</button>
-</div>
-<header class="hero">
-  <button id="theme-toggle" type="button" aria-label="Theme: auto — tap to change" title="Theme: auto (tap to change)">◐</button>
-  <h1>Household Budget</h1>
-</header>
-<nav id="tabs">
-  <button type="button" data-tab="overview" class="active">Overview</button>
-  <button type="button" data-tab="income">Income &amp; bills</button>
-  <button type="button" data-tab="spending">Spending &amp; debt</button>
-  <button type="button" data-tab="calendar">Calendar</button>
-</nav>
-<main>
-  <section id="tab-overview" class="tabpanel"></section>
-  <section id="tab-income" class="tabpanel" hidden></section>
-  <section id="tab-spending" class="tabpanel" hidden></section>
-  <section id="tab-calendar" class="tabpanel" hidden></section>
-</main>
-<div id="modal-overlay" class="overlay" hidden>
-  <div class="modal">
-    <p id="modal-text"></p>
-    <div class="modal-actions">
-      <button id="modal-cancel" type="button" class="btn plain">Keep item</button>
-      <button id="modal-confirm" type="button" class="btn danger">Delete item</button>
-    </div>
+  <div class="wrap">
+    <header class="hero">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Theme: auto — tap to change" title="Theme: auto (tap to change)">◐</button>
+      <div class="hero-grid">
+        <div><div class="eyebrow" id="heroPeriod">This month</div><h1>Budget</h1><p>Track each person’s income, who an expense is for, who pays it, and the money Mike transfers to Sara for shared bills.</p></div>
+        <div class="session-note"><div class="date-block"><span class="note-label">Current budget period</span><strong id="budgetPeriod">This month</strong><span id="dateContext">Using your device’s current date.</span></div><div><strong>Saving your budget</strong>Changes save automatically to your shared budget database and sync to every device — no links to manage.<span class="link-save-status" id="linkSaveStatus">Loading…</span></div></div>
+      </div>
+    </header>
+    <nav class="tab-nav" role="tablist" aria-label="Budget sections">
+      <button class="tab-btn" id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview">Overview</button>
+      <button class="tab-btn" id="tab-budget" type="button" role="tab" aria-selected="false" aria-controls="panel-budget" data-tab="budget" tabindex="-1">Income &amp; bills</button>
+      <button class="tab-btn" id="tab-spending" type="button" role="tab" aria-selected="false" aria-controls="panel-spending" data-tab="spending" tabindex="-1">Spending &amp; debt</button>
+      <button class="tab-btn" id="tab-calendar" type="button" role="tab" aria-selected="false" aria-controls="panel-calendar" data-tab="calendar" tabindex="-1">Calendar</button>
+    </nav>
+    <main>
+      <div class="tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" data-panel="overview">
+        <section class="dashboard" aria-label="Budget overview">
+          <article class="spark-card">
+            <div class="spark-top">
+              <div><div class="card-kicker">Sara’s weekly Spark target</div><div class="target"><span id="weeklyTarget">$81</span> <small>gross / week</small></div><p class="spark-explain" id="targetExplain">Covers Sara’s remaining share after other income, with tax and car-cost reserves included.</p></div>
+              <div class="spark-check"><label for="expectedWeek">Expected Spark gross this week</label><div class="money-input"><span>$</span><input id="expectedWeek" inputmode="decimal" type="number" min="0" step="10" value="0" aria-label="Expected Spark gross this week"></div><div class="status-line" id="weekStatus">Enter a number to compare.</div></div>
+            </div>
+            <div class="mini-settings">
+              <div class="field"><label for="taxReserve">Tax reserve (%)</label><input id="taxReserve" type="number" min="0" max="60" step="1" value="18" aria-label="Tax reserve percent"></div>
+              <div class="field"><label for="carReserve">Gas + car reserve (%)</label><input id="carReserve" type="number" min="0" max="60" step="1" value="12" aria-label="Gas and car reserve percent"></div>
+              <div class="field"><label for="weeksMonth">Working weeks / month</label><input id="weeksMonth" type="number" min="1" max="6" step=".01" value="4.33" aria-label="Working weeks per month"></div>
+            </div>
+          </article>
+          <aside class="responsibility"><h2>Suggested savings</h2>
+            <div class="owner-total" style="--owner-color:var(--mike)"><i class="dot"></i><span>Mike after bills, transfers &amp; extra spending</span><strong id="mikeLeft">$0</strong></div>
+            <div class="owner-total" style="--owner-color:var(--sara)"><i class="dot"></i><span>Sara after bills &amp; extra spending</span><strong id="saraLeft">$0</strong></div>
+            <div class="owner-total" style="--owner-color:var(--shared)"><i class="dot"></i><span>Shared costs</span><strong id="sharedBucket">$500</strong></div>
+            <p class="shared-note" id="sharedNote">Each suggestion is the amount left in that person’s account after bills, transfers, and their spending slider.</p>
+          </aside>
+        </section>
+        <section class="metric-strip" aria-label="Monthly budget totals">
+          <div class="metric"><span>Household income</span><strong id="incomeTotal">$2,600</strong></div><div class="metric"><span>Bills, spending, and savings</span><strong id="expenseTotal">$500</strong></div><div class="metric"><span>Household amount left</span><strong id="marginTotal">$2,100</strong></div>
+        </section>
+        <section class="household-pot" aria-labelledby="householdPotTitle">
+          <div class="pot-heading"><h2 id="householdPotTitle">Household pot</h2><p>Mike’s transfers compared with shared bills paid by Sara.</p></div>
+          <div class="pot-stat"><span>Transfers to Sara</span><strong id="potTransfers">$1,500.00</strong></div>
+          <div class="pot-stat"><span>Shared bills paid by Sara</span><strong id="potBills">$560.00</strong></div>
+          <div class="pot-stat"><span id="potBalanceLabel">Surplus</span><strong class="surplus" id="potBalance">$940.00</strong></div>
+        </section>
+        <section class="upcoming-card" aria-labelledby="upcomingTitle">
+          <div class="upcoming-head"><div><h2 id="upcomingTitle">Upcoming bills &amp; transfers</h2><p id="upcomingContext">What is due next, based on today.</p></div><div class="upcoming-tools"><div class="upcoming-sort" role="group" aria-label="Sort upcoming bills"><button type="button" data-upcoming-sort="date" aria-pressed="true">By date</button><button type="button" data-upcoming-sort="name" aria-pressed="false">A–Z</button><button type="button" data-upcoming-sort="owner" aria-pressed="false">By owner</button></div><button id="viewCalendarBtn" type="button">View calendar</button></div></div>
+          <div class="upcoming-filterbar" aria-label="Filter dashboard bills"><div class="compact-field"><label for="upcomingOwnerFilter">Owner</label><select id="upcomingOwnerFilter"><option value="All">All owners</option><option>Mike</option><option>Sara</option><option>Shared</option></select></div><div class="compact-field"><label for="upcomingTypeFilter">Type</label><select id="upcomingTypeFilter"><option value="All">All types</option><option value="monthly">Monthly</option><option value="annual">Annual</option><option value="once">One-time</option></select></div><div class="compact-field"><label for="upcomingStatusFilter">Status</label><select id="upcomingStatusFilter"><option value="unpaid">All unpaid</option><option value="soon">Due soon</option><option value="overdue">Overdue</option><option value="upcoming">Upcoming</option><option value="paid">Paid</option><option value="all">All statuses</option></select></div></div>
+          <div class="upcoming-list" id="upcomingList"></div>
+          <div id="upcomingUnknown"></div>
+        </section>
+        <section class="paid-card" aria-labelledby="paidTitle">
+          <div class="paid-head"><div><h2 id="paidTitle">Paid or sent</h2><p>Bills marked paid and transfers marked sent in this version of the link.</p></div><span class="paid-count" id="paidCount">0 paid or sent</span></div>
+          <div class="paid-list" id="paidList"></div>
+        </section>
+      </div>
+
+      <div class="tab-panel" id="panel-budget" role="tabpanel" aria-labelledby="tab-budget" data-panel="budget" hidden>
+        <div class="control-rail" aria-label="Owner view filter">
+          <div class="filter-label">Show entries for</div>
+          <div class="filter-group" role="group" aria-label="Filter income and bills by owner">
+            <button class="filter-btn active" data-filter="All" type="button">All</button><button class="filter-btn" data-filter="Mike" type="button">Mike</button><button class="filter-btn" data-filter="Sara" type="button">Sara</button><button class="filter-btn" data-filter="Shared" type="button">Shared</button>
+          </div>
+        </div>
+        <div class="bill-list-controls" aria-label="Sort and filter bills and subscriptions"><div class="filter-label">Bills &amp; subscriptions</div><div class="list-sort" role="group" aria-label="Sort bills and subscriptions"><button type="button" data-planner-sort="date" aria-pressed="true">Expected date</button><button type="button" data-planner-sort="name" aria-pressed="false">A–Z</button></div><div class="compact-field"><label for="plannerTypeFilter">Type</label><select id="plannerTypeFilter"><option value="All">All types</option><option value="monthly">Monthly</option><option value="annual">Annual</option><option value="once">One-time</option></select></div><div class="compact-field"><label for="plannerStatusFilter">Status</label><select id="plannerStatusFilter"><option value="All">All statuses</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div></div>
+        <div class="planner">
+          <section class="section wide"><div class="section-head"><div><h2>Income</h2><p>Enter monthly take-home amounts and replace estimates when averages are confirmed. The Spark target is calculated separately.</p></div><button class="add-btn" data-add="income" type="button">+ Add income</button></div><div class="item-list" id="incomeList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Transfers</h2><p>Money Mike sends to Sara. Add transfer creates a one-time entry; change Repeats when needed.</p></div><button class="add-btn" data-add="transfers" type="button">+ Add transfer</button></div><div class="item-list" id="transfersList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Bills</h2><p>Housing, utilities, insurance, storage, and other recurring costs.</p></div><button class="add-btn" data-add="bills" type="button">+ Add bill</button></div><div class="item-list" id="billsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Subscriptions</h2><p>Monthly memberships and services.</p></div><button class="add-btn" data-add="subscriptions" type="button">+ Add subscription</button></div><div class="item-list" id="subscriptionsList"></div></section>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-spending" role="tabpanel" aria-labelledby="tab-spending" data-panel="spending" hidden>
+        <div class="control-rail" aria-label="Owner view filter">
+          <div class="filter-label">Show entries for</div>
+          <div class="filter-group" role="group" aria-label="Filter spending and debt by owner">
+            <button class="filter-btn active" data-filter="All" type="button">All</button><button class="filter-btn" data-filter="Mike" type="button">Mike</button><button class="filter-btn" data-filter="Sara" type="button">Sara</button><button class="filter-btn" data-filter="Shared" type="button">Shared</button>
+          </div>
+        </div>
+        <div class="planner">
+          <section class="section wide"><div class="section-head"><div><h2>Savings pools</h2><p>Give each goal an owner, set its target and monthly contribution, then update the current balance when you move money.</p></div><button class="add-btn" data-add="savings" type="button">+ Add savings pool</button></div><div class="item-list" id="savingsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Debt payments</h2><p>Put only this month’s planned payment here.</p></div><button class="add-btn" data-add="debts" type="button">+ Add payment</button></div><div class="item-list" id="debtsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Other planned spending</h2><p>Eating out, events, gifts, home projects.</p></div><button class="add-btn" data-add="extras" type="button">+ Add extra</button></div><div class="item-list" id="extrasList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Extra monthly spending</h2><p>Choose a separate personal spending amount for each person. These amounts reduce that person’s suggested savings.</p></div></div>
+            <div class="extra-box"><div class="personal-spending-grid">
+              <div class="personal-spending" style="--person-color:var(--mike)"><div class="slider-label"><span>Mike</span><strong id="mikeSpendingValue">$0</strong></div><p>Monthly personal spending from Mike’s account.</p><input id="mikeSpendingRange" type="range" min="0" max="1200" step="25" value="0" aria-label="Mike extra monthly spending"><div class="quick-row"><button class="quick-btn" data-spending-person="Mike" data-spending="0" type="button">$0</button><button class="quick-btn" data-spending-person="Mike" data-spending="100" type="button">$100</button><button class="quick-btn" data-spending-person="Mike" data-spending="250" type="button">$250</button><button class="quick-btn" data-spending-person="Mike" data-spending="500" type="button">$500</button></div></div>
+              <div class="personal-spending" style="--person-color:var(--sara)"><div class="slider-label"><span>Sara</span><strong id="saraSpendingValue">$0</strong></div><p>Monthly personal spending from Sara’s account.</p><input id="saraSpendingRange" type="range" min="0" max="1200" step="25" value="0" aria-label="Sara extra monthly spending"><div class="quick-row"><button class="quick-btn" data-spending-person="Sara" data-spending="0" type="button">$0</button><button class="quick-btn" data-spending-person="Sara" data-spending="100" type="button">$100</button><button class="quick-btn" data-spending-person="Sara" data-spending="250" type="button">$250</button><button class="quick-btn" data-spending-person="Sara" data-spending="500" type="button">$500</button></div></div>
+            </div></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-calendar" role="tabpanel" aria-labelledby="tab-calendar" data-panel="calendar" hidden>
+        <section class="calendar-shell" aria-label="Expected date calendar">
+          <div class="calendar-head">
+            <div><h2 id="calendarTitle">This month</h2><p>Expected dates from bills, transfers, subscriptions, and debt payments.</p></div>
+            <div class="calendar-controls" aria-label="Calendar month controls"><button id="calendarPrev" type="button" aria-label="Previous month">‹</button><button class="today-btn" id="calendarToday" type="button">Today</button><button id="calendarNext" type="button" aria-label="Next month">›</button></div>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="mobile-day-detail" id="mobileDayDetail" role="dialog" aria-modal="true" aria-labelledby="mobileDayTitle" aria-hidden="true"></div>
+          <div class="calendar-agenda" id="calendarAgenda"></div>
+          <div id="calendarUnknown"></div>
+          <div class="calendar-legend" aria-label="Owner color key"><span class="legend-item" style="--owner-color:var(--mike)"><i></i>Mike</span><span class="legend-item" style="--owner-color:var(--sara)"><i></i>Sara</span><span class="legend-item" style="--owner-color:var(--shared)"><i></i>Shared</span></div>
+        </section>
+      </div>
+      <div class="footer-actions"><p id="planCount">21 entries · monthly and one-time amounts are labeled</p><div class="action-row"><button class="ghost-btn" id="copyBtn" type="button">Copy summary</button><button class="solid-btn" id="downloadBtn" type="button">Download plan</button></div></div>
+    </main>
   </div>
-</div>
-<div id="day-overlay" class="overlay" hidden>
-  <div class="popup">
-    <button id="day-close" type="button" aria-label="Close">×</button>
-    <h3 id="day-title"></h3>
-    <div id="day-list"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="confirm-backdrop" id="deleteConfirm" hidden>
+    <section class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmMessage">
+      <h2 id="deleteConfirmTitle">Are you sure?</h2>
+      <p id="deleteConfirmMessage">Delete this item? This cannot be undone in this version of the budget.</p>
+      <div class="confirm-actions"><button class="confirm-cancel" id="deleteCancel" type="button">Keep item</button><button class="confirm-delete" id="deleteAccept" type="button">Delete item</button></div>
+    </section>
   </div>
-</div>
-<script>
-/* ================= utils ================= */
-function uid(){ return 'x' + Math.random().toString(36).slice(2,10); }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
-function fmt(n){ n=num(n); var neg=n<0; n=Math.abs(n); return (neg?'-$':'$')+n.toFixed(2); }
-function ownerTag(o){ return '<span class="tag '+esc(o)+'">'+esc(o)+'</span>'; }
-function monthName(m){ return ['January','February','March','April','May','June','July','August','September','October','November','December'][m]; }
-function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
-function todayParts(){ var d=new Date(); return {y:d.getFullYear(),m:d.getMonth(),d:d.getDate()}; }
-
-/* ================= seed data ================= */
-function mkBill(name,amount,owner,paidBy,day){
-  return {id:uid(),name:name,amount:amount,owner:owner,paidBy:paidBy,day:(day==null?null:day),splitMike:50,splitSara:50,enabled:true};
-}
-function seedState(){
-  return {
-    income:[
-      {id:uid(),name:'SEAPCO paycheck',owner:'Mike',amount:1300,per:'paycheck',note:'15th & last day of month'},
-      {id:uid(),name:'Spark delivery',owner:'Sara',amount:0,per:'month',note:'variable — update as known'}
-    ],
-    bills:[
-      mkBill('Netflix',26.99,'Mike','Mike',15),
-      mkBill('YouTube Premium',9.91,'Mike','Mike',null),
-      mkBill('AMC Theatres',28.83,'Mike','Mike',null),
-      mkBill('Audible',14.95,'Mike','Mike',null),
-      mkBill('Amazon Prime',6.99,'Mike','Mike',null),
-      mkBill('Discord Nitro',11.03,'Mike','Mike',null),
-      mkBill('Patreon — Quinns Quest',3.31,'Mike','Mike',null),
-      mkBill('Patreon',4.40,'Mike','Mike',null),
-      mkBill('DoorDash DashPass',9.99,'Mike','Mike',null),
-      mkBill('Apple App Store',12.99,'Mike','Mike',null),
-      mkBill('Google One',2.29,'Mike','Mike',null),
-      mkBill('Obsidian',6.90,'Mike','Mike',null),
-      mkBill('Obsidian (2nd)',6.90,'Mike','Mike',null),
-      mkBill('SoFi investing',25,'Mike','Mike',15),
-      mkBill('Mortgage',500,'Shared','Sara',15),
-      mkBill('Cedar Street Mini Storage',60,'Shared','Sara',15)
-    ],
-    transfers:[
-      {id:uid(),name:'Transfer to Sara',amount:750,day:15},
-      {id:uid(),name:'Transfer to Sara',amount:750,day:30}
-    ],
-    pools:[
-      {id:uid(),name:'Christmas',owner:'Mike',target:1200,balance:0}
-    ],
-    debts:[
-      {id:uid(),name:'First Premier',amount:384,owner:'Mike',note:'due Oct 26'}
-    ],
-    other:[],
-    sliders:{Mike:250,Sara:100},
-    spark:{taxPct:0,carCosts:0,extraSpending:0,workingWeeks:4.33},
-    billFilter:'All',
-    calCursor:null
-  };
-}
-function normalizeState(s){
-  var d=seedState();
-  if(!s||typeof s!=='object') return d;
-  Object.keys(d).forEach(function(k){ if(s[k]!==undefined&&s[k]!==null) d[k]=s[k]; });
-  if(!d.sliders) d.sliders={Mike:250,Sara:100};
-  if(!d.spark) d.spark={taxPct:0,carCosts:0,extraSpending:0,workingWeeks:4.33};
-  return d;
-}
-var state = seedState();
-
-/* ================= calculations ================= */
-function enabledBills(){ return state.bills.filter(function(b){return b.enabled;}); }
-function incomeMonthly(who){
-  return state.income.filter(function(i){return i.owner===who;})
-    .reduce(function(s,i){ return s + num(i.amount)*(i.per==='paycheck'?2:1); },0);
-}
-function billsPaidBy(who){
-  return enabledBills().filter(function(b){return b.paidBy===who;})
-    .reduce(function(s,b){ return s+num(b.amount); },0);
-}
-function sharedBillsTotal(){
-  return enabledBills().filter(function(b){return b.owner==='Shared';})
-    .reduce(function(s,b){ return s+num(b.amount); },0);
-}
-function transfersTotal(){
-  return state.transfers.reduce(function(s,t){ return s+num(t.amount); },0);
-}
-function suggested(who){
-  var inc=incomeMonthly(who), bills=billsPaidBy(who), slider=num(state.sliders[who]), t=transfersTotal();
-  if(who==='Mike') return inc - bills - t - slider;
-  return inc + t - bills - slider; /* Sara: transfers are inflow */
-}
-function pot(){ var tin=transfersTotal(), out=sharedBillsTotal(); return {tin:tin,out:out,surplus:tin-out}; }
-function saraMonthlyNeed(){
-  var saraOwn=enabledBills().filter(function(b){return b.owner==='Sara';})
-    .reduce(function(s,b){ return s+num(b.amount); },0);
-  return saraOwn + sharedBillsTotal()/2;
-}
-function sparkTarget(){
-  var sp=state.spark, weeks=num(sp.workingWeeks)||4.33;
-  var denom=1-num(sp.taxPct)/100; if(!(denom>0)) denom=1;
-  var grossMonthly=(saraMonthlyNeed()+(num(sp.carCosts)+num(sp.extraSpending))*weeks)/denom;
-  return Math.ceil(grossMonthly/weeks-1e-9);
-}
-
-/* ================= Supabase persistence ================= */
-var SUPABASE_URL='https://aysnrdjkfzpslpubgfru.supabase.co';
-var SUPABASE_KEY='sb_publishable_29VqvNEq6jljDrbFrNQdIQ_V01R9y4O';
-var saveTimer=null, savePending=false;
-
-function setIndicator(mode,when){
-  var el=document.getElementById('save-indicator');
-  el.className='';
-  if(mode==='loading'){ el.textContent='Loading…'; el.className='saving'; }
-  else if(mode==='saving'){ el.textContent='Saving…'; el.className='saving'; }
-  else if(mode==='saved'){
-    var t=when||new Date(), h=t.getHours(), m=t.getMinutes(), ap=h>=12?'PM':'AM';
-    h=h%12; if(h===0)h=12;
-    el.textContent='Saved ✓ '+h+':'+(m<10?'0':'')+m+' '+ap; el.className='saved';
-  }
-  else if(mode==='offline'){ el.textContent='Offline — will retry'; el.className='offline'; }
-  else if(mode==='ready'){ el.textContent='Ready — changes save automatically'; el.className='saved'; }
-}
-function markDirty(){
-  render();
-  if(saveTimer) clearTimeout(saveTimer);
-  saveTimer=setTimeout(persist,1000);
-}
-async function persist(){
-  saveTimer=null;
-  setIndicator('saving');
-  try{
-    var r=await fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared',{
-      method:'PATCH',
-      headers:{
-        'apikey':SUPABASE_KEY,
-        'Authorization':'Bearer '+SUPABASE_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'return=minimal'
-      },
-      body:JSON.stringify({data:state,updated_at:new Date().toISOString()})
-    });
-    if(!r.ok) throw new Error('http '+r.status);
-    savePending=false;
-    setIndicator('saved',new Date());
-  }catch(e){
-    savePending=true;
-    setIndicator('offline');
-  }
-}
-async function loadFromServer(){
-  setIndicator('loading');
-  try{
-    var r=await fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared&select=data',{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    });
-    if(!r.ok) throw new Error('http '+r.status);
-    var j=await r.json();
-    if(j&&j.length&&j[0].data&&Object.keys(j[0].data).length){
-      state=normalizeState(j[0].data);
-      setIndicator('saved',new Date());
-    }else{
-      setIndicator('ready');
-    }
-  }catch(e){
-    setIndicator('offline');
-  }
-  render();
-}
-window.addEventListener('online',function(){ if(savePending){ persist(); } });
-
-/* ================= modal ================= */
-var modalAction=null;
-function askConfirm(text,confirmLabel,cancelLabel,action){
-  document.getElementById('modal-text').textContent=text;
-  document.getElementById('modal-confirm').textContent=confirmLabel||'Delete item';
-  document.getElementById('modal-cancel').textContent=cancelLabel||'Keep item';
-  modalAction=action||null;
-  document.getElementById('modal-overlay').hidden=false;
-}
-function hideModal(){ document.getElementById('modal-overlay').hidden=true; modalAction=null; }
-function flash(msg){
-  var d=document.createElement('div'); d.className='flash'; d.textContent=msg;
-  document.body.appendChild(d); setTimeout(function(){ d.remove(); },2200);
-}
-/* ================= events / calendar data ================= */
-function eventsForDay(y,m,d){
-  var ev=[];
-  enabledBills().forEach(function(b){
-    if(b.day===d) ev.push({label:b.name,amount:num(b.amount),tag:b.owner,kind:'bill'});
-  });
-  state.transfers.forEach(function(t){
-    if(num(t.day)===d) ev.push({label:t.name+' — Mike to Sara',amount:num(t.amount),tag:'Shared',kind:'transfer'});
-  });
-  var last=daysInMonth(y,m);
-  if(d===15||d===last) ev.push({label:'SEAPCO paycheck (Mike)',amount:1300,tag:'Mike',kind:'income'});
-  return ev;
-}
-function upcomingEvents(n){
-  var out=[], t=todayParts();
-  for(var i=0;i<=n;i++){
-    var dt=new Date(t.y,t.m,t.d+i);
-    var evs=eventsForDay(dt.getFullYear(),dt.getMonth(),dt.getDate());
-    if(evs.length) out.push({date:dt,events:evs});
-  }
-  return out;
-}
-function fmtDate(d){ return monthName(d.getMonth()).slice(0,3)+' '+d.getDate(); }
-
-/* ================= OVERVIEW ================= */
-function sparkCardHTML(){
-  var sp=state.spark, tgt=sparkTarget();
-  return '<div class="card"><h2>Sara\u2019s Spark target</h2>'+
-    '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">'+
-    '<span class="big money" style="color:var(--pink)">'+fmt(tgt)+'</span><span class="muted">/ week gross</span></div>'+
-    '<div class="row"><label class="fld">Tax %<input type="number" id="sp-tax" value="'+esc(sp.taxPct)+'" step="0.1" min="0" max="60" onchange="sparkField(\'taxPct\',this.value)"></label>'+
-    '<label class="fld">Car costs $/week<input type="number" id="sp-car" value="'+esc(sp.carCosts)+'" step="0.5" min="0" onchange="sparkField(\'carCosts\',this.value)"></label>'+
-    '<label class="fld">Extra spending $/week<input type="number" id="sp-extra" value="'+esc(sp.extraSpending)+'" step="1" min="0" onchange="sparkField(\'extraSpending\',this.value)"></label>'+
-    '<label class="fld">Working weeks<input type="number" id="sp-weeks" value="'+esc(sp.workingWeeks)+'" step="0.01" min="1" max="5" onchange="sparkField(\'workingWeeks\',this.value)"></label></div>'+
-    '<p class="muted">Covers Sara\u2019s share of monthly bills ('+fmt(saraMonthlyNeed())+'/mo). Gross target accounts for tax and costs above.</p></div>';
-}
-function snapshotHTML(who){
-  var t=transfersTotal();
-  var rows=[
-    ['Income / mo',fmt(incomeMonthly(who))],
-    ['Bills paid / mo',fmt(billsPaidBy(who))],
-    [who==='Mike'?'Transfers to Sara':'Transfers from Mike',fmt(t)],
-    ['Extra spending allowance',fmt(state.sliders[who])]
-  ];
-  var s=suggested(who);
-  var h='<div class="snap '+who+'"><div style="margin-bottom:6px">'+ownerTag(who)+' <strong>'+who+'</strong></div>';
-  rows.forEach(function(r){ h+='<div class="kv"><span>'+r[0]+'</span><span class="money">'+r[1]+'</span></div>'; });
-  h+='<div class="kv" style="border-top:2px solid var(--tan);margin-top:4px;padding-top:6px"><span><strong>Suggested savings</strong></span><span class="money '+(s<0?'bad':'ok')+'">'+fmt(s)+'</span></div></div>';
-  return h;
-}
-function renderOverview(){
-  var t=todayParts(), html='';
-  /* upcoming */
-  var up=upcomingEvents(7);
-  html+='<div class="card"><h2>Coming up — next 7 days</h2>';
-  if(!up.length) html+='<p class="muted">Nothing due in the next 7 days.</p>';
-  up.forEach(function(u){
-    html+='<div class="row"><span class="grow"><strong>'+fmtDate(u.date)+'</strong></span></div>';
-    u.events.forEach(function(e){
-      html+='<div class="row" style="padding-left:14px"><span class="grow">'+esc(e.label)+'</span>'+ownerTag(e.tag)+'<span class="money">'+fmt(e.amount)+'</span></div>';
-    });
-  });
-  html+='</div>';
-  /* attention: due earlier this month */
-  var attn=enabledBills().filter(function(b){return b.day!=null&&b.day<t.d;});
-  var attnT=state.transfers.filter(function(x){return num(x.day)<t.d;});
-  if(attn.length||attnT.length){
-    html+='<div class="card"><h2>Check these</h2><p class="muted">Due earlier this month — confirm paid:</p>';
-    attn.forEach(function(b){ html+='<div class="row"><span class="grow">'+esc(b.name)+'</span>'+ownerTag(b.owner)+'<span class="money warn">'+fmt(b.amount)+'</span></div>'; });
-    attnT.forEach(function(x){ html+='<div class="row"><span class="grow">'+esc(x.name)+' — Mike to Sara</span><span class="money warn">'+fmt(x.amount)+'</span></div>'; });
-    html+='</div>';
-  }
-  /* pot */
-  var p=pot();
-  html+='<div class="card"><h2>Household pot</h2>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Transfers in (Mike → Sara)</span><span class="money">'+fmt(p.tin)+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Shared bills out</span><span class="money">'+fmt(p.out)+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid var(--tan);margin-top:4px"><span><strong>Surplus</strong></span><span class="money '+(p.surplus<0?'bad':'ok')+'">'+fmt(p.surplus)+'</span></div></div>';
-  /* snapshots */
-  html+='<div class="card"><h2>Per-person snapshot</h2><div class="grid2">'+snapshotHTML('Mike')+snapshotHTML('Sara')+'</div>'+
-    '<p class="muted">Suggested savings = income − bills paid − transfers − extra spending. Transfers are committed household money, never spare cash.</p></div>';
-  /* spark */
-  html+=sparkCardHTML();
-  /* copy/download */
-  html+='<div class="card"><h2>Share the plan</h2><div style="display:flex;gap:10px;flex-wrap:wrap">'+
-    '<button type="button" class="btn" onclick="copyPlan()">Copy plan</button>'+
-    '<button type="button" class="btn secondary" onclick="downloadJSON()">Download</button></div></div>';
-  document.getElementById('tab-overview').innerHTML=html;
-}
-
-/* ================= INCOME & BILLS ================= */
-function ownerOpts(sel){
-  return ['Mike','Sara','Shared'].map(function(o){
-    return '<option value="'+o+'"'+(o===sel?' selected':'')+'>'+o+'</option>';
-  }).join('');
-}
-function dayOpts(sel){
-  var h='<option value=""'+(sel==null?' selected':'')+'>Unknown</option>';
-  for(var d=1;d<=31;d++) h+='<option value="'+d+'"'+(sel===d?' selected':'')+'>'+d+'</option>';
-  return h;
-}
-function incomeRowHTML(i){
-  return '<div class="row"><input class="grow" type="text" value="'+esc(i.name)+'" onchange="incomeField(\''+i.id+'\',\'name\',this.value)" aria-label="Income name">'+
-    '<label class="fld">Owner<select onchange="incomeField(\''+i.id+'\',\'owner\',this.value)">'+ownerOpts(i.owner)+'</select></label>'+
-    '<label class="fld">Amount $/mo<input type="number" step="0.01" min="0" value="'+esc(i.amount)+'" onchange="incomeField(\''+i.id+'\',\'amount\',this.value)"></label>'+
-    '<label class="fld">Per<select onchange="incomeField(\''+i.id+'\',\'per\',this.value)">'+
-    '<option value="paycheck"'+(i.per==='paycheck'?' selected':'')+'>paycheck ×2</option>'+
-    '<option value="month"'+(i.per==='month'?' selected':'')+'>month</option></select></label>'+
-    '<button type="button" class="iconbtn" onclick="delIncome(\''+i.id+'\')" aria-label="Delete">🗑</button></div>';
-}
-function billRowHTML(b){
-  var split='';
-  if(b.owner==='Shared'){
-    split='<label class="fld">Mike %<input type="number" min="0" max="100" style="width:64px" value="'+esc(b.splitMike)+'" onchange="billField(\''+b.id+'\',\'splitMike\',this.value)"></label>'+
-      '<label class="fld">Sara %<input type="number" min="0" max="100" style="width:64px" value="'+esc(b.splitSara)+'" onchange="billField(\''+b.id+'\',\'splitSara\',this.value)"></label>';
-  }
-  return '<div class="row"><input type="checkbox"'+(b.enabled?' checked':'')+' onchange="toggleBill(\''+b.id+'\',this.checked)" aria-label="Enabled">'+
-    '<input class="grow" type="text" value="'+esc(b.name)+'" onchange="billField(\''+b.id+'\',\'name\',this.value)" aria-label="Bill name">'+
-    '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(b.amount)+'" onchange="billField(\''+b.id+'\',\'amount\',this.value)"></label>'+
-    '<label class="fld">Owner<select onchange="billField(\''+b.id+'\',\'owner\',this.value)">'+ownerOpts(b.owner)+'</select></label>'+
-    '<label class="fld">Paid by<select onchange="billField(\''+b.id+'\',\'paidBy\',this.value)">'+ownerOpts(b.paidBy)+'</select></label>'+
-    '<label class="fld">Expected date<select onchange="billField(\''+b.id+'\',\'day\',this.value)">'+dayOpts(b.day)+'</select></label>'+
-    split+
-    '<button type="button" class="iconbtn" onclick="delBill(\''+b.id+'\')" aria-label="Delete">🗑</button></div>';
-}
-function transferRowHTML(t){
-  return '<div class="row"><span class="tag Shared">Mike to Sara</span>'+
-    '<input class="grow" type="text" value="'+esc(t.name)+'" onchange="transferField(\''+t.id+'\',\'name\',this.value)" aria-label="Transfer name">'+
-    '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(t.amount)+'" onchange="transferField(\''+t.id+'\',\'amount\',this.value)"></label>'+
-    '<label class="fld">Day<select onchange="transferField(\''+t.id+'\',\'day\',this.value)">'+dayOpts(num(t.day)||null)+'</select></label>'+
-    '<button type="button" class="iconbtn" onclick="delTransfer(\''+t.id+'\')" aria-label="Delete">🗑</button></div>';
-}
-function renderIncome(){
-  var html='<div class="card"><h2>Income</h2>';
-  state.income.forEach(function(i){ html+=incomeRowHTML(i); });
-  html+='<div class="addform"><input type="text" id="ni-name" placeholder="Income name" class="grow">'+
-    '<select id="ni-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<input type="number" id="ni-amount" placeholder="$/mo" step="0.01" min="0">'+
-    '<button type="button" class="btn small" onclick="addIncome()">Add income</button></div></div>';
-  /* bills */
-  var f=state.billFilter||'All';
-  html+='<div class="card"><h2>Bills</h2><div class="chips">'+
-    ['All','Mike','Sara','Shared'].map(function(o){
-      return '<button type="button" class="'+(f===o?'active':'')+'" onclick="setBillFilter(\''+o+'\')">'+o+'</button>';
-    }).join('')+'</div>';
-  state.bills.filter(function(b){return f==='All'||b.owner===f;}).forEach(function(b){ html+=billRowHTML(b); });
-  html+='<div class="addform"><input type="text" id="nb-name" placeholder="Bill name" class="grow">'+
-    '<input type="number" id="nb-amount" placeholder="$" step="0.01" min="0">'+
-    '<select id="nb-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<select id="nb-paidby"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<button type="button" class="btn small" onclick="addBill()">Add bill</button></div>'+
-    '<p class="muted">Owner = whose budget it belongs to. Paid by = whose account it comes out of.</p></div>';
-  /* transfers */
-  html+='<div class="card"><h2>Transfers to Sara</h2><p class="muted">Mike outflow, Sara inflow. Committed household money — never spare cash.</p>';
-  state.transfers.forEach(function(t){ html+=transferRowHTML(t); });
-  html+='<div class="addform"><input type="number" id="nt-amount" placeholder="$" step="0.01" min="0">'+
-    '<select id="nt-day">'+dayOpts(15)+'</select>'+
-    '<button type="button" class="btn small" onclick="addTransfer()">Add transfer</button></div></div>';
-  /* totals */
-  var p=pot();
-  html+='<div class="card"><h2>Totals</h2>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Mike income / mo</span><span class="money">'+fmt(incomeMonthly('Mike'))+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Mike bills paid / mo</span><span class="money">'+fmt(billsPaidBy('Mike'))+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Sara income / mo</span><span class="money">'+fmt(incomeMonthly('Sara'))+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Sara bills paid / mo</span><span class="money">'+fmt(billsPaidBy('Sara'))+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Transfers to Sara / mo</span><span class="money">'+fmt(p.tin)+'</span></div>'+
-    '<div class="kv" style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid var(--tan);margin-top:4px"><span><strong>Household pot surplus</strong></span><span class="money '+(p.surplus<0?'bad':'ok')+'">'+fmt(p.surplus)+'</span></div></div>';
-  document.getElementById('tab-income').innerHTML=html;
-}
-/* income handlers */
-function findIncome(id){ return state.income.find(function(i){return i.id===id;}); }
-function incomeField(id,field,val){
-  var i=findIncome(id); if(!i) return;
-  i[field]=(field==='amount')?num(val):val;
-  markDirty();
-}
-function delIncome(id){
-  var i=findIncome(id); if(!i) return;
-  askConfirm('Delete income "'+i.name+'"? Are you sure?','Delete item','Keep item',function(){
-    state.income=state.income.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addIncome(){
-  var n=document.getElementById('ni-name').value.trim(); if(!n){flash('Name the income first');return;}
-  state.income.push({id:uid(),name:n,owner:document.getElementById('ni-owner').value,amount:num(document.getElementById('ni-amount').value),per:'month',note:''});
-  markDirty();
-}
-/* bill handlers */
-function findBill(id){ return state.bills.find(function(b){return b.id===id;}); }
-function toggleBill(id,on){ var b=findBill(id); if(b){b.enabled=!!on; markDirty();} }
-function billField(id,field,val){
-  var b=findBill(id); if(!b) return;
-  if(field==='amount') b.amount=num(val);
-  else if(field==='day') b.day=(val===''||val==null)?null:parseInt(val,10);
-  else if(field==='splitMike'||field==='splitSara') b[field]=num(val);
-  else b[field]=val;
-  markDirty();
-}
-function setBillFilter(f){ state.billFilter=f; markDirty(); }
-function delBill(id){
-  var b=findBill(id); if(!b) return;
-  askConfirm('Delete bill "'+b.name+'"? Are you sure?','Delete item','Keep item',function(){
-    state.bills=state.bills.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addBill(){
-  var n=document.getElementById('nb-name').value.trim(); if(!n){flash('Name the bill first');return;}
-  state.bills.push({id:uid(),name:n,amount:num(document.getElementById('nb-amount').value),
-    owner:document.getElementById('nb-owner').value,paidBy:document.getElementById('nb-paidby').value,
-    day:null,splitMike:50,splitSara:50,enabled:true});
-  markDirty();
-}
-/* transfer handlers */
-function findTransfer(id){ return state.transfers.find(function(t){return t.id===id;}); }
-function transferField(id,field,val){
-  var t=findTransfer(id); if(!t) return;
-  if(field==='amount') t.amount=num(val);
-  else if(field==='day') t.day=parseInt(val,10)||15;
-  else t[field]=val;
-  markDirty();
-}
-function delTransfer(id){
-  var t=findTransfer(id); if(!t) return;
-  askConfirm('Delete transfer "'+t.name+' '+fmt(t.amount)+'"? Are you sure?','Delete item','Keep item',function(){
-    state.transfers=state.transfers.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addTransfer(){
-  state.transfers.push({id:uid(),name:'Transfer to Sara',amount:num(document.getElementById('nt-amount').value),
-    day:parseInt(document.getElementById('nt-day').value,10)||15});
-  markDirty();
-}
-function sparkField(field,val){ state.spark[field]=num(val); markDirty(); }
-/* ================= SPENDING & DEBT ================= */
-function poolRowHTML(p){
-  var bal=num(p.balance), tgt=num(p.target);
-  var pct=tgt>0?Math.min(100,bal/tgt*100):0;
-  return '<div class="row"><input class="grow" type="text" value="'+esc(p.name)+'" onchange="poolField(\''+p.id+'\',\'name\',this.value)" aria-label="Pool name">'+
-    '<label class="fld">Owner<select onchange="poolField(\''+p.id+'\',\'owner\',this.value)">'+ownerOpts(p.owner)+'</select></label>'+
-    '<label class="fld">Target $<input type="number" step="0.01" min="0" value="'+esc(p.target)+'" onchange="poolField(\''+p.id+'\',\'target\',this.value)"></label>'+
-    '<label class="fld">Balance $<input type="number" step="0.01" value="'+esc(p.balance)+'" onchange="poolField(\''+p.id+'\',\'balance\',this.value)"></label>'+
-    '<button type="button" class="iconbtn" onclick="delPool(\''+p.id+'\')" aria-label="Delete">🗑</button></div>'+
-    '<div class="progress"><div style="width:'+pct.toFixed(1)+'%"></div></div>'+
-    '<div class="muted" style="margin:2px 0 10px">'+fmt(bal)+' of '+fmt(tgt)+' ('+Math.round(pct)+'%)</div>';
-}
-function renderSpending(){
-  var html='<div class="card"><h2>Savings pools</h2>';
-  state.pools.forEach(function(p){ html+=poolRowHTML(p); });
-  html+='<div class="addform"><input type="text" id="np-name" placeholder="Pool name" class="grow">'+
-    '<select id="np-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<input type="number" id="np-target" placeholder="Target $" step="0.01" min="0">'+
-    '<button type="button" class="btn small" onclick="addPool()">Add pool</button></div></div>';
-  html+='<div class="card"><h2>Extra monthly spending</h2>';
-  ['Mike','Sara'].forEach(function(who){
-    var s=suggested(who), key=who.toLowerCase();
-    html+='<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center">'+
-      '<span>'+ownerTag(who)+' <strong>'+who+'</strong></span>'+
-      '<span class="money" id="sl-'+key+'-val">'+fmt(state.sliders[who])+'</span></div>'+
-      '<input type="range" id="sl-'+key+'" min="0" max="1000" step="10" value="'+esc(state.sliders[who])+'" oninput="sliderInput(\''+who+'\',this.value)" onchange="sliderDone()">'+
-      '<div style="display:flex;justify-content:space-between"><span class="muted">Suggested savings</span><span class="money '+(s<0?'bad':'ok')+'" id="sug-'+key+'">'+fmt(s)+'</span></div></div>';
-  });
-  html+='<p class="muted">Suggested savings = income &minus; bills paid &minus; transfers &minus; this allowance.</p></div>';
-  html+='<div class="card"><h2>Debt payments</h2>';
-  state.debts.forEach(function(d){
-    html+='<div class="row"><input class="grow" type="text" value="'+esc(d.name)+'" onchange="debtField(\''+d.id+'\',\'name\',this.value)" aria-label="Debt name">'+
-      '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(d.amount)+'" onchange="debtField(\''+d.id+'\',\'amount\',this.value)"></label>'+
-      '<label class="fld">Owner<select onchange="debtField(\''+d.id+'\',\'owner\',this.value)">'+ownerOpts(d.owner)+'</select></label>'+
-      '<input class="grow" type="text" placeholder="Note" value="'+esc(d.note||'')+'" onchange="debtField(\''+d.id+'\',\'note\',this.value)" aria-label="Note">'+
-      '<button type="button" class="iconbtn" onclick="delDebt(\''+d.id+'\')" aria-label="Delete">🗑</button></div>';
-  });
-  html+='<div class="addform"><input type="text" id="nd-name" placeholder="Debt name" class="grow">'+
-    '<input type="number" id="nd-amount" placeholder="$" step="0.01" min="0">'+
-    '<select id="nd-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<button type="button" class="btn small" onclick="addDebt()">Add debt</button></div></div>';
-  html+='<div class="card"><h2>Other planned spending</h2>';
-  state.other.forEach(function(o){
-    html+='<div class="row"><input class="grow" type="text" value="'+esc(o.name)+'" onchange="otherField(\''+o.id+'\',\'name\',this.value)" aria-label="Item name">'+
-      '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(o.amount)+'" onchange="otherField(\''+o.id+'\',\'amount\',this.value)"></label>'+
-      '<label class="fld">Owner<select onchange="otherField(\''+o.id+'\',\'owner\',this.value)">'+ownerOpts(o.owner)+'</select></label>'+
-      '<button type="button" class="iconbtn" onclick="delOther(\''+o.id+'\')" aria-label="Delete">🗑</button></div>';
-  });
-  html+='<div class="addform"><input type="text" id="no-name" placeholder="Item name" class="grow">'+
-    '<input type="number" id="no-amount" placeholder="$" step="0.01" min="0">'+
-    '<select id="no-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
-    '<button type="button" class="btn small" onclick="addOther()">Add item</button></div></div>';
-  document.getElementById('tab-spending').innerHTML=html;
-}
-function findPool(id){ return state.pools.find(function(p){return p.id===id;}); }
-function poolField(id,field,val){
-  var p=findPool(id); if(!p) return;
-  if(field==='target'||field==='balance') p[field]=num(val); else p[field]=val;
-  markDirty();
-}
-function delPool(id){
-  var p=findPool(id); if(!p) return;
-  askConfirm('Delete savings pool "'+p.name+'"? Are you sure?','Delete item','Keep item',function(){
-    state.pools=state.pools.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addPool(){
-  var n=document.getElementById('np-name').value.trim(); if(!n){flash('Name the pool first');return;}
-  state.pools.push({id:uid(),name:n,owner:document.getElementById('np-owner').value,
-    target:num(document.getElementById('np-target').value),balance:0});
-  markDirty();
-}
-function sliderInput(who,val){
-  state.sliders[who]=num(val);
-  var key=who.toLowerCase(), s=suggested(who);
-  var vEl=document.getElementById('sl-'+key+'-val'); if(vEl) vEl.textContent=fmt(val);
-  var sEl=document.getElementById('sug-'+key); if(sEl){ sEl.textContent=fmt(s); sEl.className='money '+(s<0?'bad':'ok'); }
-  if(saveTimer) clearTimeout(saveTimer);
-  saveTimer=setTimeout(persist,1000);
-}
-function sliderDone(){ markDirty(); }
-function findDebt(id){ return state.debts.find(function(d){return d.id===id;}); }
-function debtField(id,field,val){
-  var d=findDebt(id); if(!d) return;
-  d[field]=(field==='amount')?num(val):val; markDirty();
-}
-function delDebt(id){
-  var d=findDebt(id); if(!d) return;
-  askConfirm('Delete debt payment "'+d.name+'"? Are you sure?','Delete item','Keep item',function(){
-    state.debts=state.debts.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addDebt(){
-  var n=document.getElementById('nd-name').value.trim(); if(!n){flash('Name the debt first');return;}
-  state.debts.push({id:uid(),name:n,amount:num(document.getElementById('nd-amount').value),
-    owner:document.getElementById('nd-owner').value,note:''});
-  markDirty();
-}
-function findOther(id){ return state.other.find(function(o){return o.id===id;}); }
-function otherField(id,field,val){
-  var o=findOther(id); if(!o) return;
-  o[field]=(field==='amount')?num(val):val; markDirty();
-}
-function delOther(id){
-  var o=findOther(id); if(!o) return;
-  askConfirm('Delete "'+o.name+'"? Are you sure?','Delete item','Keep item',function(){
-    state.other=state.other.filter(function(x){return x.id!==id;}); markDirty();
-  });
-}
-function addOther(){
-  var n=document.getElementById('no-name').value.trim(); if(!n){flash('Name the item first');return;}
-  state.other.push({id:uid(),name:n,amount:num(document.getElementById('no-amount').value),
-    owner:document.getElementById('no-owner').value});
-  markDirty();
-}
-
-/* ================= CALENDAR ================= */
-function calCursor(){
-  if(state.calCursor&&state.calCursor.y!=null) return state.calCursor;
-  var t=todayParts(); return {y:t.y,m:t.m};
-}
-function renderCalendar(){
-  var c=calCursor(), t=todayParts();
-  var first=new Date(c.y,c.m,1).getDay(), dim=daysInMonth(c.y,c.m);
-  var html='<div class="card"><div class="cal-head">'+
-    '<button type="button" class="btn plain small" onclick="calNav(-1)" aria-label="Previous month">‹</button>'+
-    '<h2>'+monthName(c.m)+' '+c.y+'</h2>'+
-    '<button type="button" class="btn plain small" onclick="calNav(1)" aria-label="Next month">›</button></div>'+
-    '<div style="text-align:center;margin-bottom:8px"><button type="button" class="btn plain small" onclick="calToday()">This month</button></div>'+
-    '<div class="cal-grid">';
-  ['S','M','T','W','T','F','S'].forEach(function(d){ html+='<div class="cal-dow">'+d+'</div>'; });
-  for(var i=0;i<first;i++) html+='<div class="cell blank"></div>';
-  for(var d=1;d<=dim;d++){
-    var evs=eventsForDay(c.y,c.m,d);
-    var dots=evs.slice(0,4).map(function(e){ return '<span class="dot '+esc(e.tag)+'"></span>'; }).join('');
-    var cls='cell'+((d===t.d&&c.m===t.m&&c.y===t.y)?' today':'');
-    html+='<button type="button" class="'+cls+'" onclick="openDay('+c.y+','+c.m+','+d+')"><span class="dnum">'+d+'</span><span class="dots">'+dots+'</span></button>';
-  }
-  html+='</div><p class="muted">Tap a date to see what\u2019s owed that day.</p></div>';
-  document.getElementById('tab-calendar').innerHTML=html;
-}
-function calNav(dir){
-  var c=calCursor(), m=c.m+dir, y=c.y;
-  if(m<0){m=11;y--;} if(m>11){m=0;y++;}
-  state.calCursor={y:y,m:m}; markDirty();
-}
-function calToday(){ state.calCursor=null; markDirty(); }
-function openDay(y,m,d){
-  var evs=eventsForDay(y,m,d);
-  document.getElementById('day-title').textContent=monthName(m)+' '+d+', '+y;
-  var h='';
-  if(!evs.length) h='<p class="muted">Nothing owed this day.</p>';
-  evs.forEach(function(e){
-    h+='<div class="day-item"><span>'+esc(e.label)+'<br>'+ownerTag(e.tag)+'</span><span class="money">'+fmt(e.amount)+'</span></div>';
-  });
-  document.getElementById('day-list').innerHTML=h;
-  document.getElementById('day-overlay').hidden=false;
-}
-/* ================= copy / download / reset ================= */
-function buildPlanText(){
-  var L=[];
-  L.push('HOUSEHOLD BUDGET PLAN');
-  L.push('Income: Mike '+fmt(incomeMonthly('Mike'))+'/mo | Sara '+fmt(incomeMonthly('Sara'))+'/mo');
-  L.push('Bills paid by Mike: '+fmt(billsPaidBy('Mike'))+'/mo | by Sara: '+fmt(billsPaidBy('Sara'))+'/mo');
-  var p=pot();
-  L.push('Transfers to Sara: '+fmt(p.tin)+'/mo | Shared bills: '+fmt(p.out)+'/mo | Pot surplus: '+fmt(p.surplus));
-  L.push('Extra spending: Mike '+fmt(state.sliders.Mike)+'/mo | Sara '+fmt(state.sliders.Sara)+'/mo');
-  L.push('Suggested savings: Mike '+fmt(suggested('Mike'))+' | Sara '+fmt(suggested('Sara')));
-  L.push('Savings pools:');
-  state.pools.forEach(function(pl){ L.push('  - '+pl.name+' ('+pl.owner+'): '+fmt(pl.balance)+' / '+fmt(pl.target)); });
-  if(state.debts.length){
-    L.push('Debt payments:');
-    state.debts.forEach(function(d){ L.push('  - '+d.name+' ('+d.owner+'): '+fmt(d.amount)+(d.note?' — '+d.note:'')); });
-  }
-  L.push('Sara Spark weekly target: '+fmt(sparkTarget()));
-  return L.join('\n');
-}
-function fallbackCopy(t){
-  var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); }catch(e){}
-  ta.remove();
-}
-function copyPlan(){
-  var t=buildPlanText();
-  function done(){ flash('Plan copied to clipboard'); }
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(done).catch(function(){ fallbackCopy(t); done(); });
-  }else{ fallbackCopy(t); done(); }
-}
-function downloadJSON(){
-  var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download='household-budget.json';
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },800);
-  flash('Downloaded household-budget.json');
-}
-function wireReset(){
-  document.getElementById('reset-btn').addEventListener('click',function(){
-    askConfirm('Reset everything to the published defaults? Are you sure?','Reset to defaults','Keep my numbers',function(){
-      var headers={
-        'apikey':SUPABASE_KEY,
-        'Authorization':'Bearer '+SUPABASE_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'return=minimal'
-      };
-      fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared',{
-        method:'PATCH',headers:headers,
-        body:JSON.stringify({data:{},updated_at:new Date().toISOString()})
-      }).catch(function(){});
-      state=seedState();
-      setIndicator('saved',new Date());
-      render();
-    });
-  });
-}
-
-/* ================= render + init ================= */
-function render(){
-  renderOverview();
-  renderIncome();
-  renderSpending();
-  renderCalendar();
-}
-/* ================= theme toggle (per-device, stored locally) ================= */
-var THEMES=['auto','dark','light'];
-var THEME_ICONS={auto:'◐',dark:'☾',light:'☀'};
-function currentTheme(){
-  var t=null;
-  try{ t=localStorage.getItem('budget-theme'); }catch(e){}
-  return THEMES.indexOf(t)>=0 ? t : 'auto';
-}
-function applyTheme(){
-  var t=currentTheme();
-  if(t==='auto') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme',t);
-  var el=document.getElementById('theme-toggle');
-  if(el){
-    el.textContent=THEME_ICONS[t];
-    el.setAttribute('aria-label','Theme: '+t+' — tap to change');
-    el.title='Theme: '+t+' (tap to change)';
-  }
-}
-function cycleTheme(){
-  var t=currentTheme();
-  var next=THEMES[(THEMES.indexOf(t)+1)%THEMES.length];
-  try{ localStorage.setItem('budget-theme',next); }catch(e){}
-  applyTheme();
-}
-applyTheme();
-
-document.addEventListener('DOMContentLoaded',function(){
-  document.querySelectorAll('#tabs button').forEach(function(b){
-    b.addEventListener('click',function(){
-      document.querySelectorAll('#tabs button').forEach(function(x){ x.classList.remove('active'); });
-      b.classList.add('active');
-      var t=b.getAttribute('data-tab');
-      document.querySelectorAll('.tabpanel').forEach(function(p){ p.hidden=true; });
-      document.getElementById('tab-'+t).hidden=false;
-    });
-  });
-  document.getElementById('modal-cancel').addEventListener('click',hideModal);
-  document.getElementById('modal-confirm').addEventListener('click',function(){
-    var a=modalAction; hideModal(); if(a) a();
-  });
-  document.getElementById('modal-overlay').addEventListener('click',function(e){
-    if(e.target===this) hideModal();
-  });
-  document.getElementById('day-close').addEventListener('click',function(){
-    document.getElementById('day-overlay').hidden=true;
-  });
-  document.getElementById('day-overlay').addEventListener('click',function(e){
-    if(e.target===this) this.hidden=true;
-  });
-  wireReset();
-  document.getElementById('theme-toggle').addEventListener('click',cycleTheme);
-  applyTheme();
-  render();
-  loadFromServer();
-});
-</script>
+  <script>
+    (function () {
+      var state = { filter: 'All', activeTab: 'overview', upcomingSort: 'date', upcomingOwner: 'All', upcomingType: 'All', upcomingStatus: 'unpaid', plannerSort: 'date', plannerType: 'All', plannerStatus: 'All', calendarYear: null, calendarMonth: null, selectedCalendarDay: null, nextId: 22, items: [
+        { id: 1, type: 'income', name: 'Mike — SEAPCO take-home (current estimate)', amount: 2600, owner: 'Mike', split: 50 },
+        { id: 2, type: 'bills', name: 'Mortgage', amount: 500, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
+        { id: 3, type: 'bills', name: 'Cedar Street Mini Storage — usually $60–$80; current amount $60', amount: 60, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
+        { id: 4, type: 'bills', name: 'SoFi investing auto-deposit', amount: 25, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '15' },
+        { id: 5, type: 'subscriptions', name: 'Netflix', amount: 26.99, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '13' },
+        { id: 6, type: 'subscriptions', name: 'YouTube Premium', amount: 9.91, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '1' },
+        { id: 7, type: 'subscriptions', name: 'AMC Theatres', amount: 28.83, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '21' },
+        { id: 8, type: 'subscriptions', name: 'Audible', amount: 14.95, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '21' },
+        { id: 9, type: 'subscriptions', name: 'Amazon Prime', amount: 6.99, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '3' },
+        { id: 10, type: 'subscriptions', name: 'Discord Nitro', amount: 11.03, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '30' },
+        { id: 11, type: 'subscriptions', name: 'Patreon membership #1', amount: 3.31, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '2' },
+        { id: 12, type: 'subscriptions', name: 'Patreon membership #2', amount: 4.40, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '16' },
+        { id: 13, type: 'subscriptions', name: 'DoorDash DashPass', amount: 9.99, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '18' },
+        { id: 14, type: 'subscriptions', name: 'Apple subscription (identify which service)', amount: 12.99, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '16' },
+        { id: 15, type: 'subscriptions', name: 'Google One', amount: 2.29, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '30' },
+        { id: 16, type: 'subscriptions', name: 'Obsidian — two $6.90 charges per month', amount: 13.80, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '15, 30' },
+        { id: 17, type: 'extras', name: 'DoorDash food orders — frequent, usually $24–$133 each; set a monthly budget', amount: 0, owner: 'Mike', paidBy: 'Mike', split: 50 },
+        { id: 18, type: 'debts', name: 'First Premier', amount: 384, owner: 'Mike', paidBy: 'Mike', split: 50, schedule: 'once', expected: '2026-10-26' },
+        { id: 19, type: 'transfers', name: 'Transfer to Sara', amount: 750, owner: 'Sara', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '15' },
+        { id: 20, type: 'transfers', name: 'Transfer to Sara', amount: 750, owner: 'Sara', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: '30' },
+        { id: 21, type: 'savings', name: 'Christmas', amount: 0, owner: 'Mike', paidBy: 'Mike', split: 50, target: 1200, currentBalance: 0 }
+      ], personalSpending: { Mike: 0, Sara: 0 } };
+      var restoredSettings = null;
+      var pendingDeleteId = null;
+      var deleteReturnFocus = null;
+      var types = ['income', 'transfers', 'bills', 'subscriptions', 'savings', 'debts', 'extras'];
+      var typeLabels = { income: 'Income', transfers: 'Transfer', bills: 'Bill', subscriptions: 'Subscription', savings: 'Savings goal', debts: 'Debt payment', extras: 'Extra spending' };
+      var ownerVars = { Mike: { color: 'var(--mike)', soft: 'var(--mike-soft)' }, Sara: { color: 'var(--sara)', soft: 'var(--sara-soft)' }, Shared: { color: 'var(--shared)', soft: 'var(--shared-soft)' } };
+      var money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      var money2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+      var monthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
+      var fullDate = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      var shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+      var dateState = getDateState();
+      var calendarCursor = new Date(state.calendarYear === null ? dateState.now.getFullYear() : state.calendarYear, state.calendarMonth === null ? dateState.now.getMonth() : state.calendarMonth, 1);
+      var selectedCalendarDay = state.selectedCalendarDay === null ? dateState.now.getDate() : state.selectedCalendarDay;
+      function n(value) { var x = parseFloat(value); return Number.isFinite(x) ? Math.max(0, x) : 0; }
+      function getDateState() { var now = new Date(); var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); var daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); return { now: now, start: start, daysInMonth: daysInMonth, daysLeft: daysInMonth - now.getDate(), key: now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() }; }
+      /* ================= Supabase persistence (shared database) ================= */
+      var SUPABASE_URL = 'https://aysnrdjkfzpslpubgfru.supabase.co';
+      var SUPABASE_KEY = 'sb_publishable_29VqvNEq6jljDrbFrNQdIQ_V01R9y4O';
+      var saveTimer = null, savePending = false, remoteReady = false, suppressSave = false, dirtyBeforeLoad = false;
+      function setSaveStatus(mode, when) {
+        var el = document.getElementById('linkSaveStatus'); if (!el) return;
+        if (mode === 'loading') el.textContent = 'Loading\u2026';
+        else if (mode === 'saving') el.textContent = 'Saving\u2026';
+        else if (mode === 'saved') { var t = when || new Date(), h = t.getHours(), m = t.getMinutes(), ap = h >= 12 ? 'PM' : 'AM'; h = h % 12; if (h === 0) h = 12; el.textContent = 'Saved \u2713 ' + h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap; }
+        else if (mode === 'offline') el.textContent = 'Offline \u2014 will retry';
+        else if (mode === 'ready') el.textContent = 'Ready \u2014 changes save automatically';
+      }
+      function isArtifactShape(d) { return d && Array.isArray(d.items); }
+      function isLiveShape(d) { return d && Array.isArray(d.bills); }
+      function migrateLiveRow(d) {
+        var items = []; var nextId = 22;
+        function ownerOf(v) { return v === 'Mike' || v === 'Sara' || v === 'Shared' ? v : 'Shared'; }
+        function payerOf(v, owner) { return v === 'Mike' || v === 'Sara' ? v : (owner === 'Mike' ? 'Mike' : 'Sara'); }
+        function billType(name) { var nm = String(name || '').toLowerCase(); if (nm.indexOf('mortgage') >= 0 || nm.indexOf('cedar street') >= 0 || nm.indexOf('sofi') >= 0) return 'bills'; return 'subscriptions'; }
+        (d.bills || []).forEach(function (b) {
+          items.push({ id: nextId++, type: billType(b.name), name: String(b.name || ''), amount: n(b.amount), owner: ownerOf(b.owner), paidBy: payerOf(b.paidBy, b.owner), split: Math.min(100, n(b.splitSara)), schedule: 'monthly', expected: b.day ? String(b.day) : 'Unknown', paid: false, enabled: b.enabled !== false });
+        });
+        (d.income || []).forEach(function (inc) {
+          var amt = n(inc.amount) * (inc.per === 'paycheck' ? 2 : 1);
+          items.push({ id: nextId++, type: 'income', name: String(inc.name || ''), amount: amt, owner: ownerOf(inc.owner), paidBy: ownerOf(inc.owner), split: 50 });
+        });
+        (d.transfers || []).forEach(function (t) {
+          items.push({ id: nextId++, type: 'transfers', name: String(t.name || 'Transfer to Sara'), amount: n(t.amount), owner: 'Sara', paidBy: 'Mike', split: 50, schedule: 'monthly', expected: t.day ? String(t.day) : 'Unknown', paid: false });
+        });
+        (d.pools || []).forEach(function (p) {
+          items.push({ id: nextId++, type: 'savings', name: String(p.name || ''), amount: 0, owner: ownerOf(p.owner), paidBy: ownerOf(p.owner), split: 50, target: n(p.target), currentBalance: n(p.balance) });
+        });
+        (d.debts || []).forEach(function (x) {
+          items.push({ id: nextId++, type: 'debts', name: String(x.name || ''), amount: n(x.amount), owner: ownerOf(x.owner), paidBy: ownerOf(x.owner), split: 50, schedule: 'once', expected: '', paid: false });
+        });
+        (d.other || []).forEach(function (o) {
+          items.push({ id: nextId++, type: 'extras', name: String(o.name || ''), amount: n(o.amount), owner: ownerOf(o.owner), paidBy: payerOf(o.paidBy, o.owner), split: 50 });
+        });
+        return {
+          items: items, nextId: nextId,
+          personalSpending: { Mike: n(d.sliders && d.sliders.Mike), Sara: n(d.sliders && d.sliders.Sara) },
+          settings: { taxReserve: Math.min(60, n(d.spark && d.spark.taxPct)), carReserve: Math.min(60, n(d.spark && d.spark.carCosts)), weeksMonth: Math.max(1, n(d.spark && d.spark.workingWeeks) || 4.33), expectedWeek: 0 },
+          filter: ['All', 'Mike', 'Sara', 'Shared'].indexOf(d.billFilter) >= 0 ? d.billFilter : 'All'
+        };
+      }
+      function hydrateArtifactPayload(d) {
+        if (Array.isArray(d.items)) state.items = d.items;
+        if (Number.isFinite(Number(d.nextId))) state.nextId = Number(d.nextId);
+        ['filter', 'activeTab', 'upcomingSort', 'upcomingOwner', 'upcomingType', 'upcomingStatus', 'plannerSort', 'plannerType', 'plannerStatus'].forEach(function (k) { if (d[k] !== undefined) state[k] = d[k]; });
+        if (Number.isInteger(d.calendarYear)) state.calendarYear = d.calendarYear;
+        if (Number.isInteger(d.calendarMonth) && d.calendarMonth >= 0 && d.calendarMonth <= 11) state.calendarMonth = d.calendarMonth;
+        if (Number.isInteger(d.selectedCalendarDay)) state.selectedCalendarDay = d.selectedCalendarDay;
+        if (d.personalSpending) { state.personalSpending.Mike = n(d.personalSpending.Mike); state.personalSpending.Sara = n(d.personalSpending.Sara); }
+        if (d.settings) restoredSettings = d.settings;
+        calendarCursor = new Date(state.calendarYear === null ? dateState.now.getFullYear() : state.calendarYear, state.calendarMonth === null ? dateState.now.getMonth() : state.calendarMonth, 1);
+        selectedCalendarDay = state.selectedCalendarDay === null ? dateState.now.getDate() : state.selectedCalendarDay;
+      }
+      function hydrateMigrated(m) {
+        state.items = m.items; state.nextId = m.nextId;
+        state.personalSpending = m.personalSpending; state.filter = m.filter;
+        restoredSettings = m.settings;
+      }
+      async function persistNow() {
+        saveTimer = null;
+        setSaveStatus('saving');
+        try {
+          var r = await fetch(SUPABASE_URL + '/rest/v1/budget_state?id=eq.shared', {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ data: savedPayload(), updated_at: new Date().toISOString() })
+          });
+          if (!r.ok) throw new Error('http ' + r.status);
+          savePending = false; setSaveStatus('saved', new Date());
+        } catch (e) { savePending = true; setSaveStatus('offline'); }
+      }
+      async function loadFromSupabase() {
+        setSaveStatus('loading');
+        try {
+          var r = await fetch(SUPABASE_URL + '/rest/v1/budget_state?id=eq.shared&select=data', { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+          if (!r.ok) throw new Error('http ' + r.status);
+          var j = await r.json();
+          if (dirtyBeforeLoad) { remoteReady = true; setSaveStatus('saving'); if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(persistNow, 1000); return; }
+          if (j && j.length && j[0].data && Object.keys(j[0].data).length) {
+            var d = j[0].data;
+            suppressSave = true;
+            if (isArtifactShape(d)) hydrateArtifactPayload(d);
+            else if (isLiveShape(d)) hydrateMigrated(migrateLiveRow(d));
+            applyRestoredControls(); syncFilterButtons(); updateDateContext(); renderLists(); calculate(); selectTab(state.activeTab, false);
+            suppressSave = false;
+            setSaveStatus('ready');
+          } else { setSaveStatus('ready'); }
+        } catch (e) { setSaveStatus('offline'); }
+        remoteReady = true;
+      }
+      window.addEventListener('online', function () { if (savePending) persistNow(); });
+      /* theme toggle: per-device localStorage, never touches the shared row */
+      var THEMES = ['auto', 'dark', 'light']; var THEME_ICONS = { auto: '\u25d0', dark: '\u263e', light: '\u2600' };
+      function currentTheme() { var t = null; try { t = localStorage.getItem('budget-theme'); } catch (e) {} return THEMES.indexOf(t) >= 0 ? t : 'auto'; }
+      function applyTheme() { var t = currentTheme(); if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); var el = document.getElementById('themeToggle'); if (el) { el.textContent = THEME_ICONS[t]; el.setAttribute('aria-label', 'Theme: ' + t + ' \u2014 tap to change'); el.title = 'Theme: ' + t + ' (tap to change)'; } }
+      function cycleTheme() { var t = currentTheme(); var nx = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]; try { localStorage.setItem('budget-theme', nx); } catch (e) {} applyTheme(); }
+      applyTheme();
+      function savedPayload() {
+        return { v: 3, nextId: state.nextId, filter: state.filter, activeTab: state.activeTab, upcomingSort: state.upcomingSort, upcomingOwner: state.upcomingOwner, upcomingType: state.upcomingType, upcomingStatus: state.upcomingStatus, plannerSort: state.plannerSort, plannerType: state.plannerType, plannerStatus: state.plannerStatus, calendarYear: calendarCursor.getFullYear(), calendarMonth: calendarCursor.getMonth(), selectedCalendarDay: selectedCalendarDay, items: state.items, personalSpending: state.personalSpending, settings: { taxReserve: n(document.getElementById('taxReserve').value), carReserve: n(document.getElementById('carReserve').value), weeksMonth: n(document.getElementById('weeksMonth').value), expectedWeek: n(document.getElementById('expectedWeek').value) } };
+      }
+      function saveToHash() {
+        if (suppressSave) return;
+        if (!remoteReady) { dirtyBeforeLoad = true; return; }
+        setSaveStatus('saving');
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(persistNow, 1000);
+      }
+      function applyRestoredControls() {
+        if (restoredSettings) {
+          ['taxReserve', 'carReserve', 'weeksMonth', 'expectedWeek'].forEach(function (id) { if (restoredSettings[id] !== undefined) document.getElementById(id).value = restoredSettings[id]; });
+        }
+        ['Mike', 'Sara'].forEach(function (person) { var key = person.toLowerCase(); document.getElementById(key + 'SpendingRange').value = Math.min(1200, state.personalSpending[person]); document.getElementById(key + 'SpendingValue').textContent = money.format(state.personalSpending[person]); });
+        document.getElementById('upcomingOwnerFilter').value = state.upcomingOwner; document.getElementById('upcomingTypeFilter').value = state.upcomingType; document.getElementById('upcomingStatusFilter').value = state.upcomingStatus;
+        document.getElementById('plannerTypeFilter').value = state.plannerType; document.getElementById('plannerStatusFilter').value = state.plannerStatus;
+      }
+      function scheduleOf(item) { if (item.schedule) return item.schedule; return /^\d{4}-\d{2}-\d{2}$/.test(String(item.expected || '').trim()) ? 'once' : 'monthly'; }
+      function monthlyDays(item) { var raw = String(item.expected || '').trim(); if (!raw || /^unknown$/i.test(raw)) return []; return raw.split(',').map(function (part) { return Number(part.trim().replace(/(?:st|nd|rd|th)$/i, '')); }).filter(function (day) { return Number.isInteger(day) && day >= 1 && day <= 31; }); }
+      function annualParts(item) {
+        var raw = String(item.expected || '').trim(); if (!raw || /^unknown$/i.test(raw)) return null;
+        var iso = raw.match(/^\d{4}-(\d{2})-(\d{2})$/); if (iso) return { month: Number(iso[1]) - 1, day: Number(iso[2]) };
+        var numeric = raw.match(/^(\d{1,2})[\/-](\d{1,2})$/); if (numeric) return { month: Number(numeric[1]) - 1, day: Number(numeric[2]) };
+        var named = raw.match(/^([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?$/i); if (!named) return null;
+        var months = ['january','february','march','april','may','june','july','august','september','october','november','december']; var needle = named[1].toLowerCase(); var month = months.findIndex(function (value) { return value.indexOf(needle) === 0; });
+        return month < 0 ? null : { month: month, day: Number(named[2]) };
+      }
+      function oneTimeDate(item) { var raw = String(item.expected || '').trim(); var iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (!iso) return null; var date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])); return date.getFullYear() === Number(iso[1]) && date.getMonth() === Number(iso[2]) - 1 && date.getDate() === Number(iso[3]) ? date : null; }
+      function clampedDate(year, month, day) { return new Date(year, month, Math.min(day, new Date(year, month + 1, 0).getDate())); }
+      function expectedDates(item) {
+        var schedule = scheduleOf(item); var now = dateState.start;
+        if (schedule === 'once') { var exact = oneTimeDate(item); return exact ? [exact] : []; }
+        if (schedule === 'annual') { var parts = annualParts(item); if (!parts || parts.month < 0 || parts.month > 11 || parts.day < 1 || parts.day > 31) return []; var annual = clampedDate(now.getFullYear(), parts.month, parts.day); if (annual < now) annual = clampedDate(now.getFullYear() + 1, parts.month, parts.day); return [annual]; }
+        return monthlyDays(item).map(function (day) { var date = clampedDate(now.getFullYear(), now.getMonth(), day); if (date < now) date = clampedDate(now.getFullYear(), now.getMonth() + 1, day); return date; }).sort(function (a, b) { return a - b; });
+      }
+      function expectedDatesForMonth(item, year, month) {
+        var schedule = scheduleOf(item);
+        if (schedule === 'once') { var exact = oneTimeDate(item); return exact && exact.getFullYear() === year && exact.getMonth() === month ? [exact] : []; }
+        if (schedule === 'annual') { var parts = annualParts(item); return parts && parts.month === month && parts.day >= 1 && parts.day <= 31 ? [clampedDate(year, month, parts.day)] : []; }
+        return monthlyDays(item).map(function (day) { return clampedDate(year, month, day); });
+      }
+      function expectedStatus(item) {
+        var dates = expectedDates(item); if (!dates.length) return { text: 'Date not entered', className: '' };
+        var date = dates[0]; var difference = Math.round((date - dateState.start) / 86400000); var schedule = scheduleOf(item);
+        if (schedule === 'once' && difference < 0) return { text: 'Overdue · ' + Math.abs(difference) + (difference === -1 ? ' day past expected' : ' days past expected'), className: 'overdue' };
+        if (difference === 0) return { text: 'Due today', className: 'soon' };
+        if (difference <= 7) return { text: 'Due soon · ' + difference + (difference === 1 ? ' day away' : ' days away'), className: 'soon' };
+        return { text: 'Next: ' + shortDate.format(date) + ' · ' + difference + ' days away', className: '' };
+      }
+      function dashboardEventStatus(event) {
+        if (event.item.paid) return 'paid';
+        var difference = Math.round((event.date - dateState.start) / 86400000);
+        if (scheduleOf(event.item) === 'once' && difference < 0) return 'overdue';
+        return difference <= 7 ? 'soon' : 'upcoming';
+      }
+      function upcomingRowHtml(event) {
+        var item = event.item; var status = dashboardEventStatus(event); var flag = status === 'paid' ? 'Paid' : status === 'overdue' ? 'Overdue' : status === 'soon' ? (event.date.getTime() === dateState.start.getTime() ? 'Due today' : 'Due soon') : 'Upcoming'; var flagClass = status === 'overdue' ? ' overdue' : status === 'soon' ? ' soon' : ''; var cadence = scheduleOf(item) === 'annual' ? 'Annual' : scheduleOf(item) === 'once' ? 'One-time' : 'Monthly';
+        var detail = item.type === 'transfers' ? 'Mike → Sara · ' + cadence : item.owner + ' · Paid by ' + item.paidBy + ' · ' + cadence;
+        return '<div class="upcoming-row" style="' + ownerStyle(item.owner) + '"><span class="upcoming-date">' + shortDate.format(event.date) + '</span><span class="upcoming-name"><strong>' + escapeHtml(item.name || 'Untitled') + '</strong><span>' + detail + '</span></span><span class="upcoming-amount">' + money2.format(item.amount) + '</span><span class="due-flag' + flagClass + '">' + flag + '</span><button class="paid-action" type="button" data-paid-id="' + item.id + '">' + (item.paid ? 'Mark unpaid' : item.type === 'transfers' ? 'Mark sent' : 'Mark paid') + '</button></div>';
+      }
+      function syncUpcomingSortButtons() {
+        document.querySelectorAll('[data-upcoming-sort]').forEach(function (button) { button.setAttribute('aria-pressed', button.dataset.upcomingSort === state.upcomingSort ? 'true' : 'false'); });
+      }
+      function renderUpcoming() {
+        var tracked = state.items.filter(function (item) {
+          if (item.type !== 'bills' && item.type !== 'subscriptions' && item.type !== 'debts' && item.type !== 'transfers') return false;
+          if (state.upcomingOwner !== 'All' && item.owner !== state.upcomingOwner) return false;
+          return state.upcomingType === 'All' || scheduleOf(item) === state.upcomingType;
+        }); var events = [];
+        tracked.forEach(function (item) { expectedDates(item).forEach(function (date) { events.push({ item: item, date: date }); }); });
+        events = events.filter(function (event) { var status = dashboardEventStatus(event); if (state.upcomingStatus === 'all') return true; if (state.upcomingStatus === 'unpaid') return status !== 'paid'; return status === state.upcomingStatus; });
+        var ownerOrder = { Mike: 0, Sara: 1, Shared: 2 };
+        events.sort(function (a, b) {
+          if (state.upcomingSort === 'name') return a.item.name.localeCompare(b.item.name) || a.date - b.date;
+          if (state.upcomingSort === 'owner') return ownerOrder[a.item.owner] - ownerOrder[b.item.owner] || a.date - b.date || a.item.name.localeCompare(b.item.name);
+          return a.date - b.date || a.item.name.localeCompare(b.item.name);
+        });
+        document.getElementById('upcomingContext').textContent = 'Based on today, ' + fullDate.format(dateState.now) + '. Use the controls to narrow the list.';
+        var visibleEvents = state.upcomingSort === 'owner' ? [].concat.apply([], ['Mike', 'Sara', 'Shared'].map(function (owner) { return events.filter(function (event) { return event.item.owner === owner; }).slice(0, 4); })) : events.slice(0, 10); var listHtml = '';
+        if (!visibleEvents.length) listHtml = '<div class="upcoming-empty">No bills match these filters.</div>';
+        else if (state.upcomingSort === 'owner') {
+          ['Mike', 'Sara', 'Shared'].forEach(function (owner) {
+            var ownerEvents = visibleEvents.filter(function (event) { return event.item.owner === owner; });
+            if (!ownerEvents.length) return;
+            listHtml += '<section class="upcoming-owner-group" style="' + ownerStyle(owner) + '" aria-label="' + owner + ' bills"><div class="upcoming-owner-heading">' + owner + '</div>' + ownerEvents.map(upcomingRowHtml).join('') + '</section>';
+          });
+        } else listHtml = visibleEvents.map(upcomingRowHtml).join('');
+        document.getElementById('upcomingList').innerHTML = listHtml;
+        var unknown = tracked.filter(function (item) { if (expectedDates(item).length) return false; if (state.upcomingStatus === 'all') return true; if (state.upcomingStatus === 'paid') return item.paid; if (state.upcomingStatus === 'unpaid') return !item.paid; return false; }); var more = Math.max(0, events.length - visibleEvents.length); var notes = []; if (more) notes.push(more + ' later ' + (more === 1 ? 'date is' : 'dates are') + ' shown in the calendar'); if (unknown.length) notes.push(unknown.length + (unknown.length === 1 ? ' matching bill has' : ' matching bills have') + ' an unknown expected date'); document.getElementById('upcomingUnknown').innerHTML = notes.length ? '<div class="upcoming-unknown">' + notes.join(' · ') + '.</div>' : '';
+        syncUpcomingSortButtons(); renderPaid();
+      }
+      function renderPaid() {
+        var paid = state.items.filter(function (item) { return (item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers') && item.paid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+        document.getElementById('paidCount').textContent = paid.length + ' paid or sent';
+        document.getElementById('paidList').innerHTML = paid.length ? paid.map(function (item) { var cadence = scheduleOf(item) === 'annual' ? 'Annual' : scheduleOf(item) === 'once' ? 'One-time' : 'Monthly'; var detail = item.type === 'transfers' ? 'Mike → Sara · ' + cadence : item.owner + ' · Paid by ' + item.paidBy + ' · ' + cadence; return '<div class="paid-row" style="' + ownerStyle(item.owner) + '"><span class="paid-check">' + (item.type === 'transfers' ? 'Sent' : 'Paid') + '</span><span class="upcoming-name"><strong>' + escapeHtml(item.name || 'Untitled') + '</strong><span>' + detail + '</span></span><span class="upcoming-amount">' + money2.format(item.amount) + '</span><span class="due-flag">In this link</span><button class="paid-action" type="button" data-paid-id="' + item.id + '">Mark unpaid</button></div>'; }).join('') : '<div class="upcoming-empty">Nothing is marked paid or sent yet.</div>';
+      }
+      function setPaid(id, paid) { var item = state.items.find(function (entry) { return entry.id === Number(id); }); if (!item) return; item.paid = paid; renderLists(); calculate(); showToast(paid ? 'Marked paid and saved in this link.' : 'Marked unpaid and saved in this link.'); }
+      function updateExpectedStatuses() { document.querySelectorAll('.expected-status[data-id]').forEach(function (label) { var item = state.items.find(function (entry) { return entry.id === Number(label.dataset.id); }); if (!item) return; var status = expectedStatus(item); label.textContent = status.text; label.className = 'expected-status' + (status.className ? ' ' + status.className : ''); }); renderUpcoming(); }
+      function renderCalendar() {
+        var grid = document.getElementById('calendarGrid');
+        if (!grid) return;
+        var year = calendarCursor.getFullYear(); var month = calendarCursor.getMonth();
+        var first = new Date(year, month, 1); var startDay = first.getDay(); var daysInMonth = new Date(year, month + 1, 0).getDate(); var previousDays = new Date(year, month, 0).getDate(); selectedCalendarDay = Math.min(selectedCalendarDay, daysInMonth);
+        var tracked = state.items.filter(function (item) { return item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers'; });
+        var events = [];
+        tracked.forEach(function (item) { expectedDatesForMonth(item, year, month).forEach(function (date) { events.push({ date: date, item: item }); }); });
+        events.sort(function (a, b) { return a.date - b.date || a.item.name.localeCompare(b.item.name); });
+        document.getElementById('calendarTitle').textContent = monthYear.format(first);
+        var cells = []; var totalCells = startDay + daysInMonth <= 35 ? 35 : 42;
+        for (var index = 0; index < totalCells; index++) {
+          var number = index - startDay + 1; var cellDate; var outside = false;
+          if (number < 1) { cellDate = new Date(year, month - 1, previousDays + number); outside = true; }
+          else if (number > daysInMonth) { cellDate = new Date(year, month + 1, number - daysInMonth); outside = true; }
+          else cellDate = new Date(year, month, number);
+          var dayEvents = outside ? [] : events.filter(function (event) { return event.date.getDate() === number; });
+          var isToday = !outside && cellDate.getFullYear() === dateState.now.getFullYear() && cellDate.getMonth() === dateState.now.getMonth() && cellDate.getDate() === dateState.now.getDate();
+          var eventHtml = dayEvents.map(function (event) { var item = event.item; var detail = item.type === 'transfers' ? 'Mike to Sara' : item.owner + ', paid by ' + item.paidBy; return '<div class="calendar-event" style="' + ownerStyle(item.owner) + '" title="' + escapeHtml(item.name) + ', ' + money2.format(item.amount) + ', ' + detail + '"><strong>' + escapeHtml(item.name || 'Untitled') + '</strong><span>' + money2.format(item.amount) + ' · ' + detail + '</span></div>'; }).join('');
+          var isSelected = !outside && number === selectedCalendarDay;
+          cells.push('<div class="calendar-day' + (outside ? ' outside' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '') + '"' + (outside ? '' : ' data-calendar-day="' + number + '" tabindex="0" role="button"') + ' aria-label="' + fullDate.format(cellDate) + (dayEvents.length ? ', ' + dayEvents.length + (dayEvents.length === 1 ? ' expected payment' : ' expected payments') : ', no expected payments') + '"><span class="day-number">' + cellDate.getDate() + '</span>' + eventHtml + '</div>');
+        }
+        grid.innerHTML = cells.join('');
+        var selectedDate = new Date(year, month, Math.min(selectedCalendarDay, daysInMonth)); var selectedEvents = events.filter(function (event) { return event.date.getDate() === selectedDate.getDate(); }); var mobileDetail = document.getElementById('mobileDayDetail');
+        mobileDetail.innerHTML = '<div class="day-detail-card"><div class="day-detail-head"><h3 id="mobileDayTitle">' + fullDate.format(selectedDate) + '</h3><button class="day-detail-close" type="button" aria-label="Close day details">×</button></div>' + (selectedEvents.length ? selectedEvents.map(function (event) { var item = event.item; var detail = item.type === 'transfers' ? 'Mike to Sara' : item.owner + ' · Paid by ' + item.paidBy; return '<div class="agenda-row" style="' + ownerStyle(item.owner) + '"><span class="agenda-date">' + shortDate.format(event.date) + '</span><span class="agenda-label">' + escapeHtml(item.name || 'Untitled') + ' · ' + detail + '</span><span class="agenda-amount">' + money2.format(item.amount) + '</span></div>'; }).join('') : '<p>Nothing is owed this day.</p>') + '</div>';
+        var agenda = document.getElementById('calendarAgenda');
+        agenda.innerHTML = events.length ? '<h3 class="agenda-title">This month’s dates</h3>' + events.map(function (event) { var item = event.item; var detail = item.type === 'transfers' ? 'Mike to Sara' : item.owner + ' · Paid by ' + item.paidBy; return '<div class="agenda-row" style="' + ownerStyle(item.owner) + '"><span class="agenda-date">' + shortDate.format(event.date) + '</span><span class="agenda-label">' + escapeHtml(item.name || 'Untitled') + ' · ' + detail + '</span><span class="agenda-amount">' + money2.format(item.amount) + '</span></div>'; }).join('') : '<div class="calendar-empty">No expected dates entered for this month.</div>';
+        var unknown = tracked.filter(function (item) { return !expectedDates(item).length; });
+        document.getElementById('calendarUnknown').innerHTML = unknown.length ? '<div class="calendar-unknown"><strong>Expected date unknown:</strong> ' + unknown.map(function (item) { return escapeHtml(item.name || 'Untitled'); }).join(', ') + '.</div>' : '';
+      }
+      function closeCalendarDetail(restoreFocus) { var detail = document.getElementById('mobileDayDetail'); detail.classList.remove('open'); detail.setAttribute('aria-hidden', 'true'); if (restoreFocus) { var selected = document.querySelector('.calendar-day.selected[data-calendar-day]'); if (selected) selected.focus(); } }
+      function openCalendarDetail() { var detail = document.getElementById('mobileDayDetail'); detail.classList.add('open'); detail.setAttribute('aria-hidden', 'false'); var close = detail.querySelector('.day-detail-close'); if (close) close.focus(); }
+      function moveCalendar(months) { closeCalendarDetail(false); calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + months, 1); selectedCalendarDay = 1; renderCalendar(); saveToHash(); }
+      function selectCalendarDay(day) { selectedCalendarDay = Number(day); renderCalendar(); if (window.matchMedia('(max-width: 560px)').matches) openCalendarDetail(); saveToHash(); }
+      function updateDateContext() { dateState = getDateState(); document.getElementById('budgetPeriod').textContent = monthYear.format(dateState.now); document.getElementById('heroPeriod').textContent = monthYear.format(dateState.now); document.getElementById('dateContext').textContent = dateState.daysLeft === 0 ? 'Today is ' + fullDate.format(dateState.now) + ', the last day of the month.' : 'Today is ' + fullDate.format(dateState.now) + '. ' + dateState.daysLeft + (dateState.daysLeft === 1 ? ' day remains' : ' days remain') + ' in this month.'; updateExpectedStatuses(); renderCalendar(); }
+      function ownerStyle(owner) { var v = ownerVars[owner] || ownerVars.Shared; return '--owner-color:' + v.color + ';--owner-soft:' + v.soft; }
+      function visibleOwner(owner) { return state.filter === 'All' || owner === state.filter; }
+      function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
+      function rowTemplate(item) {
+        var splitDisabled = item.owner !== 'Shared';
+        var tracksDate = item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers';
+        var schedule = scheduleOf(item); var dateLabel = schedule === 'annual' ? 'Month + day' : schedule === 'once' ? 'Fixed date' : 'Day of month'; var placeholder = schedule === 'annual' ? 'March 15' : schedule === 'once' ? 'YYYY-MM-DD' : '15 or 15, 30'; var inputType = schedule === 'once' ? 'date' : 'text'; var expectedValue = item.expected && !/^unknown$/i.test(item.expected) ? item.expected : '';
+        var paidText = item.type === 'transfers' ? (item.paid ? 'Sent — mark unsent' : 'Mark as sent') : (item.paid ? 'Paid — mark unpaid' : 'Mark as paid');
+        var expectedField = tracksDate ? '<div class="expected-line"><div class="date-field"><label for="schedule-' + item.id + '">Repeats</label><select id="schedule-' + item.id + '" class="item-schedule" aria-label="Payment schedule"><option value="monthly"' + (schedule === 'monthly' ? ' selected' : '') + '>Monthly</option><option value="annual"' + (schedule === 'annual' ? ' selected' : '') + '>Annual</option><option value="once"' + (schedule === 'once' ? ' selected' : '') + '>One-time</option></select></div><div class="date-field"><label for="expected-' + item.id + '">' + dateLabel + '</label><input id="expected-' + item.id + '" class="item-expected" type="' + inputType + '" value="' + escapeHtml(expectedValue) + '" placeholder="' + placeholder + '" aria-label="' + typeLabels[item.type] + ' expected date"></div><em class="expected-status" data-id="' + item.id + '">' + expectedStatus(item).text + '</em><button class="paid-toggle" type="button" aria-pressed="' + (item.paid ? 'true' : 'false') + '">' + paidText + '</button></div>' : '';
+        var rowClass = item.type === 'income' ? ' income-row' : item.type === 'transfers' ? ' transfer-row' : '';
+        if (item.type === 'savings') {
+          var target = n(item.target); var balance = n(item.currentBalance); var progress = target > 0 ? Math.min(100, Math.round(balance / target * 100)) + '% of target' : 'Add a target to track progress';
+          return '<div class="item-row savings-row" data-id="' + item.id + '" data-owner="' + item.owner + '"' + (visibleOwner(item.owner) ? '' : ' hidden') + '>' +
+            '<div class="field name-field"><label>Savings pool</label><input class="item-name" value="' + escapeHtml(item.name) + '" aria-label="Savings pool name"><div class="savings-progress">' + progress + '</div></div>' +
+            '<div class="field"><label>Monthly contribution</label><div class="money-input"><span>$</span><input class="item-amount" type="number" inputmode="decimal" min="0" step="0.01" value="' + item.amount + '" aria-label="Monthly savings contribution"></div></div>' +
+            '<div class="field"><label>Owner</label><div class="owner-select-wrap" style="' + ownerStyle(item.owner) + '"><select class="item-owner" aria-label="Savings pool owner"><option' + (item.owner === 'Mike' ? ' selected' : '') + '>Mike</option><option' + (item.owner === 'Sara' ? ' selected' : '') + '>Sara</option><option' + (item.owner === 'Shared' ? ' selected' : '') + '>Shared</option></select></div></div>' +
+            '<div class="field"><label>Target</label><div class="money-input"><span>$</span><input class="savings-target" type="number" inputmode="decimal" min="0" step="1" value="' + target + '" aria-label="Savings target"></div></div>' +
+            '<div class="field"><label>Current balance</label><div class="money-input"><span>$</span><input class="savings-balance" type="number" inputmode="decimal" min="0" step="0.01" value="' + balance + '" aria-label="Current savings balance"></div></div>' +
+            '<button class="remove-btn" type="button" title="Remove item" aria-label="Remove ' + escapeHtml(item.name || 'savings pool') + '">×</button></div>';
+        }
+        var base = '<div class="item-row' + rowClass + '" data-id="' + item.id + '" data-owner="' + item.owner + '"' + (visibleOwner(item.owner) ? '' : ' hidden') + '>' +
+          '<div class="field name-field"><label>' + typeLabels[item.type] + '</label><input class="item-name" value="' + escapeHtml(item.name) + '" aria-label="' + typeLabels[item.type] + ' name">' + expectedField + '</div>' +
+          '<div class="field"><label>' + (item.type === 'transfers' ? 'Amount' : 'Monthly amount') + '</label><div class="money-input"><span>$</span><input class="item-amount" type="number" inputmode="decimal" min="0" step="0.01" value="' + item.amount + '" aria-label="' + (item.type === 'transfers' ? 'Transfer amount' : 'Monthly amount') + '"></div></div>';
+        if (item.type === 'transfers') return base + '<div class="transfer-flow">Mike to Sara</div><button class="remove-btn" type="button" title="Remove item" aria-label="Remove transfer">×</button></div>';
+        var ownerLabel = item.type === 'income' ? 'Received by' : 'For';
+        base += '<div class="field"><label>' + ownerLabel + '</label><div class="owner-select-wrap" style="' + ownerStyle(item.owner) + '"><select class="item-owner" aria-label="' + ownerLabel + '"><option' + (item.owner === 'Mike' ? ' selected' : '') + '>Mike</option><option' + (item.owner === 'Sara' ? ' selected' : '') + '>Sara</option>' + (item.type === 'income' ? '' : '<option' + (item.owner === 'Shared' ? ' selected' : '') + '>Shared</option>') + '</select></div></div>';
+        if (item.type === 'income') return base + '<button class="remove-btn" type="button" title="Remove item" aria-label="Remove ' + escapeHtml(item.name || 'income') + '">×</button></div>';
+        var paidByLabel = item.type === 'savings' ? 'Saved by' : 'Paid by';
+        base += '<div class="field"><label>' + paidByLabel + '</label><div class="owner-select-wrap" style="' + ownerStyle(item.paidBy) + '"><select class="item-paid-by" aria-label="' + paidByLabel + '"><option' + (item.paidBy === 'Mike' ? ' selected' : '') + '>Mike</option><option' + (item.paidBy === 'Sara' ? ' selected' : '') + '>Sara</option></select></div></div>' +
+          '<div class="field split-field' + (splitDisabled ? ' disabled' : '') + '"><label>Sara %</label><input class="item-split" type="number" min="0" max="100" step="5" value="' + item.split + '" aria-label="Sara share percent"' + (splitDisabled ? ' tabindex="-1"' : '') + '></div>' +
+          '<button class="remove-btn" type="button" title="Remove item" aria-label="Remove ' + escapeHtml(item.name || 'item') + '">×</button></div>';
+        return base;
+      }
+      function plannerItemVisible(item) {
+        if (item.type !== 'bills' && item.type !== 'subscriptions') return true;
+        if (state.plannerType !== 'All' && scheduleOf(item) !== state.plannerType) return false;
+        if (state.plannerStatus === 'paid' && !item.paid) return false;
+        if (state.plannerStatus === 'unpaid' && item.paid) return false;
+        return true;
+      }
+      function plannerDateValue(item) { var dates = expectedDates(item); return dates.length ? dates[0].getTime() : Number.POSITIVE_INFINITY; }
+      function syncPlannerSortButtons() { document.querySelectorAll('[data-planner-sort]').forEach(function (button) { button.setAttribute('aria-pressed', button.dataset.plannerSort === state.plannerSort ? 'true' : 'false'); }); }
+      function renderLists() {
+        types.forEach(function (type) {
+          var list = document.getElementById(type + 'List'); var items = state.items.filter(function (item) { return item.type === type && visibleOwner(item.owner) && plannerItemVisible(item); });
+          if (type === 'bills' || type === 'subscriptions') items.sort(function (a, b) { return state.plannerSort === 'name' ? a.name.localeCompare(b.name) : plannerDateValue(a) - plannerDateValue(b) || a.name.localeCompare(b.name); });
+          list.innerHTML = items.length ? items.map(rowTemplate).join('') : '<div class="empty">No ' + (type === 'income' ? 'income' : type) + ' match these filters.</div>';
+        });
+        syncPlannerSortButtons(); bindRows(); updateCount(); renderCalendar(); renderUpcoming();
+      }
+      function openDeleteConfirm(item, trigger) {
+        if (!item) return;
+        pendingDeleteId = item.id; deleteReturnFocus = trigger;
+        var label = (item.name || '').trim() || ('Untitled ' + typeLabels[item.type].toLowerCase());
+        document.getElementById('deleteConfirmMessage').textContent = 'Delete “' + label + '”? This cannot be undone in this version of the budget.';
+        document.getElementById('deleteConfirm').hidden = false; document.body.style.overflow = 'hidden';
+        document.getElementById('deleteCancel').focus();
+      }
+      function closeDeleteConfirm(restoreFocus) {
+        document.getElementById('deleteConfirm').hidden = true; document.body.style.overflow = '';
+        pendingDeleteId = null;
+        if (restoreFocus && deleteReturnFocus && document.body.contains(deleteReturnFocus)) deleteReturnFocus.focus();
+        deleteReturnFocus = null;
+      }
+      function deleteConfirmedItem() {
+        var item = state.items.find(function (entry) { return entry.id === pendingDeleteId; });
+        if (!item) { closeDeleteConfirm(false); return; }
+        var type = item.type; var label = (item.name || '').trim() || typeLabels[type];
+        state.items = state.items.filter(function (entry) { return entry.id !== item.id; });
+        closeDeleteConfirm(false); renderLists(); calculate(); showToast(label + ' deleted.');
+        var addButton = document.querySelector('[data-add="' + type + '"]'); if (addButton) addButton.focus();
+      }
+      function bindRows() {
+        document.querySelectorAll('.item-row').forEach(function (row) {
+          var id = Number(row.dataset.id); var item = state.items.find(function (x) { return x.id === id; });
+          row.querySelector('.item-name').addEventListener('input', function (e) { item.name = e.target.value; renderCalendar(); renderUpcoming(); saveToHash(); });
+          var scheduleInput = row.querySelector('.item-schedule'); if (scheduleInput) scheduleInput.addEventListener('change', function (e) { var oldSchedule = scheduleOf(item); var exact = oneTimeDate(item); item.schedule = e.target.value; if (item.schedule === 'monthly' && exact) item.expected = String(exact.getDate()); else if (item.schedule === 'annual' && exact) item.expected = String(exact.getMonth() + 1).padStart(2, '0') + '/' + String(exact.getDate()).padStart(2, '0'); else if (oldSchedule !== item.schedule) item.expected = 'Unknown'; renderLists(); calculate(); });
+          var expectedInput = row.querySelector('.item-expected'); if (expectedInput) expectedInput.addEventListener('input', function (e) { item.expected = e.target.value.trim() || 'Unknown'; updateExpectedStatuses(); renderCalendar(); calculate(); });
+          var paidToggle = row.querySelector('.paid-toggle'); if (paidToggle) paidToggle.addEventListener('click', function () { setPaid(id, !item.paid); });
+          row.querySelector('.item-amount').addEventListener('input', function (e) { item.amount = n(e.target.value); renderCalendar(); renderUpcoming(); calculate(); });
+          var splitInput = row.querySelector('.item-split'); if (splitInput) splitInput.addEventListener('input', function (e) { item.split = Math.min(100, n(e.target.value)); calculate(); });
+          var ownerInput = row.querySelector('.item-owner'); if (ownerInput) ownerInput.addEventListener('change', function (e) { item.owner = e.target.value; if (item.type === 'savings' && item.owner !== 'Shared') item.paidBy = item.owner; else if (item.type !== 'income' && !item.paidBy) item.paidBy = item.owner === 'Mike' ? 'Mike' : 'Sara'; renderLists(); calculate(); });
+          var paidByInput = row.querySelector('.item-paid-by'); if (paidByInput) paidByInput.addEventListener('change', function (e) { item.paidBy = e.target.value; renderLists(); calculate(); });
+          function refreshSavingsProgress() { var progressEl = row.querySelector('.savings-progress'); if (!progressEl) return; progressEl.textContent = item.target > 0 ? Math.min(100, Math.round(item.currentBalance / item.target * 100)) + '% of target' : 'Add a target to track progress'; }
+          var targetInput = row.querySelector('.savings-target'); if (targetInput) targetInput.addEventListener('input', function (e) { item.target = n(e.target.value); refreshSavingsProgress(); calculate(); });
+          var balanceInput = row.querySelector('.savings-balance'); if (balanceInput) balanceInput.addEventListener('input', function (e) { item.currentBalance = n(e.target.value); refreshSavingsProgress(); calculate(); });
+          row.querySelector('.remove-btn').addEventListener('click', function (event) { openDeleteConfirm(item, event.currentTarget); });
+        });
+      }
+      function shareOf(item, person) { if (item.owner === person) return item.amount; if (item.owner !== 'Shared') return 0; return item.amount * (person === 'Sara' ? item.split / 100 : (100 - item.split) / 100); }
+      function allExpenses() { var expenses = state.items.filter(function (i) { return i.type !== 'income' && i.type !== 'transfers'; }).slice(); expenses.push({ type: 'personalSpending', amount: state.personalSpending.Mike, owner: 'Mike', paidBy: 'Mike', split: 50 }, { type: 'personalSpending', amount: state.personalSpending.Sara, owner: 'Sara', paidBy: 'Sara', split: 50 }); return expenses; }
+      function proratedWeeklyTarget(expenses, saraResources, keepRate, workingWeeks) {
+        var monthEnd = new Date(dateState.now.getFullYear(), dateState.now.getMonth(), dateState.daysInMonth);
+        var obligations = [];
+        expenses.forEach(function (item) {
+          if (item.paidBy !== 'Sara' || !item.amount) return;
+          var dates = expectedDates(item); if (!dates.length) dates = [monthEnd];
+          dates.forEach(function (date) { obligations.push({ date: date, amount: item.amount / dates.length }); });
+        });
+        obligations.sort(function (a, b) { return a.date - b.date; });
+        var cumulative = 0; var target = 0;
+        obligations.forEach(function (obligation) {
+          cumulative += obligation.amount;
+          var net = Math.max(0, cumulative - saraResources);
+          var days = Math.round((obligation.date - dateState.start) / 86400000);
+          var weeksAvailable = Math.min(workingWeeks, Math.max(1, (Math.max(0, days) + 1) / 7));
+          target = Math.max(target, net / keepRate / weeksAvailable);
+        });
+        return target;
+      }
+      function calculate() {
+        var incomes = state.items.filter(function (i) { return i.type === 'income'; }); var transfers = state.items.filter(function (i) { return i.type === 'transfers'; }); var expenses = allExpenses();
+        var mikeIncome = incomes.filter(function (i) { return i.owner === 'Mike'; }).reduce(function (s, i) { return s + i.amount; }, 0); var saraIncome = incomes.filter(function (i) { return i.owner === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
+        var incomeTotal = mikeIncome + saraIncome; var transferTotal = transfers.reduce(function (s, i) { return s + i.amount; }, 0); var expenseTotal = expenses.reduce(function (s, i) { return s + i.amount; }, 0);
+        var mikeOutflows = expenses.filter(function (i) { return i.paidBy === 'Mike'; }).reduce(function (s, i) { return s + i.amount; }, 0); var saraOutflows = expenses.filter(function (i) { return i.paidBy === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
+        var mikeSuggestionOutflows = expenses.filter(function (i) { return i.paidBy === 'Mike' && i.type !== 'savings'; }).reduce(function (s, i) { return s + i.amount; }, 0); var saraSuggestionOutflows = expenses.filter(function (i) { return i.paidBy === 'Sara' && i.type !== 'savings'; }).reduce(function (s, i) { return s + i.amount; }, 0);
+        var shared = expenses.filter(function (i) { return i.owner === 'Shared'; }).reduce(function (s, i) { return s + i.amount; }, 0); var sharedPaidBySara = expenses.filter(function (i) { return i.owner === 'Shared' && i.paidBy === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
+        var mikeLeft = mikeIncome - transferTotal - mikeSuggestionOutflows; var saraLeft = transferTotal + saraIncome - saraSuggestionOutflows; var need = Math.max(0, saraOutflows - transferTotal - saraIncome);
+        var tax = Math.min(60, n(document.getElementById('taxReserve').value)); var car = Math.min(60, n(document.getElementById('carReserve').value)); var weeks = Math.max(1, n(document.getElementById('weeksMonth').value) || 4.33);
+        var keepRate = Math.max(.05, 1 - (tax + car) / 100); var weekly = proratedWeeklyTarget(expenses, saraIncome + transferTotal, keepRate, weeks); var margin = incomeTotal - expenseTotal; var potBalance = transferTotal - sharedPaidBySara;
+        document.getElementById('weeklyTarget').textContent = money.format(Math.ceil(weekly)); document.getElementById('mikeLeft').textContent = money2.format(mikeLeft); document.getElementById('saraLeft').textContent = money2.format(saraLeft); document.getElementById('sharedBucket').textContent = money2.format(shared);
+        document.getElementById('mikeLeft').style.color = mikeLeft < 0 ? 'var(--sara)' : ''; document.getElementById('saraLeft').style.color = saraLeft < 0 ? 'var(--sara)' : '';
+        document.getElementById('incomeTotal').textContent = money2.format(incomeTotal); document.getElementById('expenseTotal').textContent = money2.format(expenseTotal);
+        var marginEl = document.getElementById('marginTotal'); marginEl.textContent = money2.format(margin); marginEl.classList.toggle('negative', margin < 0);
+        document.getElementById('potTransfers').textContent = money2.format(transferTotal); document.getElementById('potBills').textContent = money2.format(sharedPaidBySara); document.getElementById('potBalanceLabel').textContent = potBalance >= 0 ? 'Surplus' : 'Shortfall'; var potBalanceEl = document.getElementById('potBalance'); potBalanceEl.textContent = money2.format(Math.abs(potBalance)); potBalanceEl.className = potBalance >= 0 ? 'surplus' : 'shortfall';
+        document.getElementById('targetExplain').textContent = need > 0 ? 'Covers the ' + money2.format(need) + ' still needed in Sara’s account after transfers and other income, with ' + (tax + car) + '% set aside for taxes and car costs.' : 'Transfers and Sara’s current income cover the bills marked Paid by Sara. Any Spark earnings can go toward goals or extra spending.';
+        document.getElementById('sharedNote').textContent = (shared ? money2.format(shared) + ' is tagged Shared. ' : '') + 'Suggested savings do not subtract planned savings-pool contributions; those stay visible in the monthly total.';
+        compareWeek(weekly); saveToHash(); return { incomeTotal: incomeTotal, expenseTotal: expenseTotal, transferTotal: transferTotal, sharedPaidBySara: sharedPaidBySara, mikeOutflows: mikeOutflows, saraOutflows: saraOutflows, mikeLeft: mikeLeft, saraLeft: saraLeft, shared: shared, need: need, weekly: weekly, tax: tax, car: car, weeks: weeks, margin: margin };
+      }
+      function compareWeek(target) { var actual = n(document.getElementById('expectedWeek').value); var el = document.getElementById('weekStatus'); el.className = 'status-line'; if (!actual) { el.textContent = 'Enter a number to compare.'; return; } var diff = actual - target; if (diff >= 0) { el.classList.add('good'); el.textContent = money2.format(diff) + ' above this week’s target.'; } else { el.classList.add('short'); el.textContent = money2.format(Math.abs(diff)) + ' short of this week’s target.'; } }
+      function addItem(type) { var owner = type === 'income' || type === 'transfers' ? 'Sara' : type === 'savings' ? 'Mike' : 'Shared'; var item = { id: state.nextId++, type: type, name: type === 'transfers' ? 'Transfer to Sara' : '', amount: 0, owner: owner, paidBy: type === 'transfers' ? 'Mike' : (owner === 'Mike' ? 'Mike' : 'Sara'), split: 50 }; if (type === 'savings') { item.target = 0; item.currentBalance = 0; } if (type === 'transfers') { item.schedule = 'once'; var today = dateState.now; item.expected = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0'); } else if (type === 'bills' || type === 'subscriptions' || type === 'debts') { item.schedule = 'monthly'; item.expected = 'Unknown'; } state.items.push(item); if (state.filter !== 'All' && state.filter !== owner) { state.filter = 'All'; syncFilterButtons(); } renderLists(); calculate(); var rows = document.querySelectorAll('#' + type + 'List .item-row'); if (rows.length) rows[rows.length - 1].querySelector('.item-name').focus(); }
+      function syncFilterButtons() { document.querySelectorAll('.filter-btn').forEach(function (btn) { btn.classList.toggle('active', btn.dataset.filter === state.filter); }); }
+      function updateFilter(filter) { state.filter = filter; syncFilterButtons(); renderLists(); saveToHash(); }
+      function setPersonalSpending(person, value) { if (person !== 'Mike' && person !== 'Sara') return; state.personalSpending[person] = Math.max(0, Number(value) || 0); var key = person.toLowerCase(); document.getElementById(key + 'SpendingRange').value = Math.min(1200, state.personalSpending[person]); document.getElementById(key + 'SpendingValue').textContent = money.format(state.personalSpending[person]); calculate(); }
+      function summaryText() {
+        updateDateContext(); var c = calculate(); var lines = ['BUDGET', monthYear.format(dateState.now), 'Generated ' + fullDate.format(dateState.now), '', 'Household income: ' + money2.format(c.incomeTotal), 'Bills, spending, and savings: ' + money2.format(c.expenseTotal), 'Household amount left: ' + money2.format(c.margin), '', 'SUGGESTED SAVINGS', 'Mike after bills, transfers, and extra spending: ' + money2.format(c.mikeLeft), 'Sara after bills and extra spending: ' + money2.format(c.saraLeft), '', 'HOUSEHOLD POT', 'Transfers to Sara: ' + money2.format(c.transferTotal), 'Shared bills paid by Sara: ' + money2.format(c.sharedPaidBySara), (c.transferTotal - c.sharedPaidBySara >= 0 ? 'Surplus: ' : 'Shortfall: ') + money2.format(Math.abs(c.transferTotal - c.sharedPaidBySara)), '', 'SARA’S WEEKLY SPARK TARGET', 'Still needed in Sara’s account: ' + money2.format(c.need), 'Weekly gross target: ' + money2.format(Math.ceil(c.weekly)), 'Assumptions: ' + c.tax + '% tax reserve, ' + c.car + '% gas/car reserve, ' + c.weeks + ' working weeks/month', '', 'BUDGET ITEMS'];
+        types.forEach(function (type) { var group = state.items.filter(function (i) { return i.type === type; }); if (!group.length) return; lines.push('', typeLabels[type].toUpperCase()); group.forEach(function (i) { var split = i.owner === 'Shared' && i.type !== 'savings' ? ' · Sara ' + i.split + '% / Mike ' + (100 - i.split) + '%' : ''; var expected = i.type === 'bills' || i.type === 'subscriptions' || i.type === 'debts' || i.type === 'transfers' ? ' · ' + (scheduleOf(i) === 'annual' ? 'Annual' : scheduleOf(i) === 'once' ? 'One-time' : 'Monthly') + ' expected date: ' + (i.expected || 'Unknown') + (i.paid ? (i.type === 'transfers' ? ' · Sent' : ' · Paid') : '') : ''; var ownership = i.type === 'transfers' ? ' · Mike to Sara' : ' · For ' + i.owner + (i.type === 'income' ? '' : i.type === 'savings' ? '' : ' · Paid by ' + i.paidBy); var savingsDetail = i.type === 'savings' ? ' monthly · Target ' + money2.format(i.target || 0) + ' · Current balance ' + money2.format(i.currentBalance || 0) : ''; lines.push((i.name || 'Untitled') + ' — ' + money2.format(i.amount) + savingsDetail + ownership + split + expected); }); });
+        lines.push('', 'EXTRA MONTHLY SPENDING', 'Mike — ' + money2.format(state.personalSpending.Mike), 'Sara — ' + money2.format(state.personalSpending.Sara), '', 'Created from Budget.'); return lines.join('\n');
+      }
+      function selectTab(name, focusTab) { state.activeTab = name; document.querySelectorAll('.tab-btn').forEach(function (btn) { var selected = btn.dataset.tab === name; btn.setAttribute('aria-selected', selected ? 'true' : 'false'); btn.tabIndex = selected ? 0 : -1; if (selected && focusTab) btn.focus(); }); document.querySelectorAll('.tab-panel').forEach(function (panel) { panel.hidden = panel.dataset.panel !== name; }); saveToHash(); }
+      function showToast(text) { var toast = document.getElementById('toast'); toast.textContent = text; toast.classList.add('show'); window.setTimeout(function () { toast.classList.remove('show'); }, 2200); }
+      function copySummary() { var text = summaryText(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { showToast('Summary copied.'); }).catch(function () { fallbackCopy(text); }); else fallbackCopy(text); }
+      function fallbackCopy(text) { var area = document.createElement('textarea'); area.value = text; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select(); try { document.execCommand('copy'); showToast('Summary copied.'); } catch (e) { showToast('Copy was blocked. Download instead.'); } document.body.removeChild(area); }
+      function downloadPlan() { var blob = new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }); var url = URL.createObjectURL(blob); var a = document.createElement('a'); var y = dateState.now.getFullYear(); var m = String(dateState.now.getMonth() + 1).padStart(2, '0'); var d = String(dateState.now.getDate()).padStart(2, '0'); a.href = url; a.download = 'budget-' + y + '-' + m + '-' + d + '.txt'; document.body.appendChild(a); a.click(); a.remove(); window.setTimeout(function () { URL.revokeObjectURL(url); }, 500); showToast('Budget plan downloaded.'); }
+      function updateCount() { document.getElementById('planCount').textContent = state.items.length + (state.items.length === 1 ? ' entry' : ' entries') + ' · monthly and one-time amounts are labeled'; }
+      document.querySelectorAll('.tab-btn').forEach(function (btn, index, tabs) { btn.addEventListener('click', function () { selectTab(btn.dataset.tab, false); }); btn.addEventListener('keydown', function (event) { if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return; event.preventDefault(); var next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : (index - 1 + tabs.length) % tabs.length; selectTab(tabs[next].dataset.tab, true); }); });
+      document.querySelectorAll('[data-add]').forEach(function (btn) { btn.addEventListener('click', function () { addItem(btn.dataset.add); }); });
+      document.querySelectorAll('.filter-btn').forEach(function (btn) { btn.addEventListener('click', function () { updateFilter(btn.dataset.filter); }); });
+      document.querySelectorAll('[data-upcoming-sort]').forEach(function (button) { button.addEventListener('click', function () { state.upcomingSort = button.dataset.upcomingSort; renderUpcoming(); saveToHash(); }); });
+      document.getElementById('upcomingOwnerFilter').addEventListener('change', function (event) { state.upcomingOwner = event.target.value; renderUpcoming(); saveToHash(); });
+      document.getElementById('upcomingTypeFilter').addEventListener('change', function (event) { state.upcomingType = event.target.value; renderUpcoming(); saveToHash(); });
+      document.getElementById('upcomingStatusFilter').addEventListener('change', function (event) { state.upcomingStatus = event.target.value; renderUpcoming(); saveToHash(); });
+      document.querySelectorAll('[data-planner-sort]').forEach(function (button) { button.addEventListener('click', function () { state.plannerSort = button.dataset.plannerSort; renderLists(); saveToHash(); }); });
+      document.getElementById('plannerTypeFilter').addEventListener('change', function (event) { state.plannerType = event.target.value; renderLists(); saveToHash(); });
+      document.getElementById('plannerStatusFilter').addEventListener('change', function (event) { state.plannerStatus = event.target.value; renderLists(); saveToHash(); });
+      document.querySelectorAll('[data-spending-person]').forEach(function (btn) { btn.addEventListener('click', function () { setPersonalSpending(btn.dataset.spendingPerson, btn.dataset.spending); }); });
+      ['taxReserve', 'carReserve', 'weeksMonth', 'expectedWeek'].forEach(function (id) { document.getElementById(id).addEventListener('input', calculate); });
+      document.getElementById('mikeSpendingRange').addEventListener('input', function (e) { setPersonalSpending('Mike', e.target.value); });
+      document.getElementById('saraSpendingRange').addEventListener('input', function (e) { setPersonalSpending('Sara', e.target.value); });
+      document.getElementById('calendarPrev').addEventListener('click', function () { moveCalendar(-1); });
+      document.getElementById('calendarNext').addEventListener('click', function () { moveCalendar(1); });
+      document.getElementById('calendarToday').addEventListener('click', function () { calendarCursor = new Date(dateState.now.getFullYear(), dateState.now.getMonth(), 1); selectedCalendarDay = dateState.now.getDate(); renderCalendar(); saveToHash(); });
+      document.getElementById('calendarGrid').addEventListener('click', function (event) { var day = event.target.closest('[data-calendar-day]'); if (day) selectCalendarDay(day.dataset.calendarDay); });
+      document.getElementById('calendarGrid').addEventListener('keydown', function (event) { if (event.key !== 'Enter' && event.key !== ' ') return; var day = event.target.closest('[data-calendar-day]'); if (!day) return; event.preventDefault(); selectCalendarDay(day.dataset.calendarDay); });
+      document.getElementById('mobileDayDetail').addEventListener('click', function (event) { if (event.target === this || event.target.closest('.day-detail-close')) closeCalendarDetail(true); });
+      document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && document.getElementById('mobileDayDetail').classList.contains('open')) closeCalendarDetail(true); });
+      document.getElementById('viewCalendarBtn').addEventListener('click', function () { calendarCursor = new Date(dateState.now.getFullYear(), dateState.now.getMonth(), 1); selectedCalendarDay = dateState.now.getDate(); selectTab('calendar', true); renderCalendar(); saveToHash(); });
+      ['upcomingList', 'paidList'].forEach(function (id) { document.getElementById(id).addEventListener('click', function (event) { var button = event.target.closest('[data-paid-id]'); if (!button) return; var item = state.items.find(function (entry) { return entry.id === Number(button.dataset.paidId); }); if (item) setPaid(item.id, !item.paid); }); });
+      document.getElementById('deleteCancel').addEventListener('click', function () { closeDeleteConfirm(true); });
+      document.getElementById('deleteAccept').addEventListener('click', deleteConfirmedItem);
+      document.getElementById('deleteConfirm').addEventListener('click', function (event) { if (event.target === this) closeDeleteConfirm(true); });
+      document.addEventListener('keydown', function (event) {
+        var confirm = document.getElementById('deleteConfirm'); if (confirm.hidden) return;
+        if (event.key === 'Escape') { event.preventDefault(); closeDeleteConfirm(true); return; }
+        if (event.key !== 'Tab') return;
+        var focusables = [document.getElementById('deleteCancel'), document.getElementById('deleteAccept')]; var current = focusables.indexOf(document.activeElement);
+        if (event.shiftKey && current <= 0) { event.preventDefault(); focusables[focusables.length - 1].focus(); }
+        else if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); focusables[0].focus(); }
+      });
+      document.getElementById('copyBtn').addEventListener('click', copySummary); document.getElementById('downloadBtn').addEventListener('click', downloadPlan);
+      document.getElementById('themeToggle').addEventListener('click', cycleTheme); applyTheme(); applyRestoredControls(); syncFilterButtons(); updateDateContext(); renderLists(); calculate(); selectTab(state.activeTab, false); window.setInterval(updateDateContext, 60000); loadFromSupabase();
+    })();
+  </script>
 </body>
 </html>
