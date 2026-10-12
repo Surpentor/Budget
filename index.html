@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mike &amp; Sara — Household Budget</title>
+<style>
+:root{
+  --pink:#d63384; --purple:#5b2a86; --purple-dark:#3d1c5e;
+  --cream:#faf6ee; --card:#fffdf8; --tan:#c69a6b; --tan-dark:#a37c4f;
+  --ink:#3a2b22; --muted:#8a7a6d; --danger:#b3261e; --green:#2e7d32;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background-color:var(--cream);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(91,42,134,.028) 0 2px, transparent 2px 14px),
+    repeating-linear-gradient(-45deg, rgba(214,51,132,.028) 0 2px, transparent 2px 14px);
+  padding-top:52px;
+}
+/* ---- save bar ---- */
+#savebar{
+  position:fixed; top:0; left:0; right:0; z-index:60;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px; background:var(--purple-dark); color:#fff;
+  font-size:13px;
+}
+#savebar .saving{color:#ffd9e8}
+#savebar .saved{color:#b9f0c0}
+#savebar .offline{color:#ffcf9e}
+#reset-btn{
+  background:transparent; border:1px solid rgba(255,255,255,.5); color:#fff;
+  border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;
+}
+/* ---- header & tabs ---- */
+header{padding:14px 16px 6px; text-align:center}
+header h1{margin:0; font-size:22px; color:var(--purple-dark); letter-spacing:.3px}
+header p{margin:4px 0 0; font-size:13px; color:var(--muted)}
+#tabs{
+  position:sticky; top:52px; z-index:50; display:flex; gap:6px;
+  padding:8px 10px; background:rgba(250,246,238,.97);
+  border-bottom:2px solid var(--tan); overflow-x:auto;
+}
+#tabs button{
+  flex:1 0 auto; padding:9px 12px; border:2px solid var(--tan); border-radius:10px;
+  background:var(--card); color:var(--purple-dark); font-size:14px; font-weight:600;
+  cursor:pointer; white-space:nowrap;
+}
+#tabs button.active{background:var(--purple); border-color:var(--purple); color:#fff}
+main{max-width:860px; margin:0 auto; padding:12px 12px 60px}
+.tabpanel[hidden]{display:none}
+/* ---- cards & rows ---- */
+.card{
+  background:var(--card); border:2px solid var(--tan); border-radius:14px;
+  padding:14px; margin:12px 0; box-shadow:0 2px 6px rgba(91,42,134,.08);
+}
+.card h2{margin:0 0 10px; font-size:17px; color:var(--purple-dark); border-bottom:2px dashed var(--tan); padding-bottom:6px}
+.card h3{margin:12px 0 6px; font-size:15px; color:var(--purple-dark)}
+.row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  padding:9px 0; border-bottom:1px solid #eee3d3; width:100%;
+}
+.row:last-child{border-bottom:none}
+.row .grow{flex:1 1 140px; min-width:120px}
+label.fld{display:flex; flex-direction:column; font-size:11px; color:var(--muted); gap:2px}
+input[type=text],input[type=number],select{
+  font-size:15px; padding:7px 9px; border:1.5px solid var(--tan); border-radius:8px;
+  background:#fff; color:var(--ink); max-width:100%;
+}
+input[type=number]{width:96px}
+input[type=checkbox]{width:20px; height:20px; accent-color:var(--purple)}
+input[type=range]{width:100%; accent-color:var(--pink); height:28px}
+button{font-family:inherit}
+.btn{
+  background:var(--pink); color:#fff; border:none; border-radius:9px;
+  padding:9px 14px; font-size:14px; font-weight:700; cursor:pointer;
+}
+.btn.secondary{background:var(--purple)}
+.btn.plain{background:#fff; color:var(--purple-dark); border:2px solid var(--tan)}
+.btn.danger{background:var(--danger)}
+.btn.small{padding:5px 10px; font-size:13px}
+.iconbtn{
+  background:none; border:none; font-size:18px; cursor:pointer; color:var(--danger);
+  padding:4px 8px; line-height:1;
+}
+/* owner tags */
+.tag{
+  display:inline-block; font-size:11px; font-weight:800; letter-spacing:.4px;
+  padding:3px 9px; border-radius:20px; color:#fff; text-transform:uppercase;
+}
+.tag.Mike{background:var(--purple)}
+.tag.Sara{background:var(--pink)}
+.tag.Shared{background:var(--tan-dark)}
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+.chips button{
+  border:2px solid var(--tan); background:#fff; border-radius:20px;
+  padding:5px 14px; font-size:13px; font-weight:700; color:var(--purple-dark); cursor:pointer;
+}
+.chips button.active{background:var(--purple-dark); color:#fff; border-color:var(--purple-dark)}
+.money{font-weight:800; font-variant-numeric:tabular-nums}
+.big{font-size:26px}
+.muted{color:var(--muted); font-size:13px}
+.ok{color:var(--green); font-weight:700}
+.warn{color:#b26a00; font-weight:700}
+.bad{color:var(--danger); font-weight:700}
+.progress{height:12px; background:#eee3d3; border-radius:8px; overflow:hidden; margin-top:6px}
+.progress > div{height:100%; background:linear-gradient(90deg,var(--pink),var(--purple)); border-radius:8px}
+/* pot + snapshots */
+.grid2{display:grid; grid-template-columns:1fr; gap:12px}
+.snap{border-left:6px solid var(--tan); padding:8px 12px; background:#fff; border-radius:8px}
+.snap.Mike{border-color:var(--purple)}
+.snap.Sara{border-color:var(--pink)}
+.snap .kv{display:flex; justify-content:space-between; font-size:14px; padding:2px 0}
+/* calendar */
+.cal-head{display:flex; align-items:center; justify-content:space-between; margin:6px 0}
+.cal-head h2{margin:0; font-size:18px; color:var(--purple-dark)}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+.cal-dow{font-size:11px; font-weight:800; color:var(--muted); text-align:center; padding:4px 0}
+.cell{
+  min-height:48px; border:1.5px solid var(--tan); border-radius:8px; background:var(--card);
+  font-size:15px; cursor:pointer; display:flex; flex-direction:column; align-items:center;
+  justify-content:flex-start; padding:4px 2px; color:var(--ink); position:relative;
+}
+.cell.blank{background:transparent; border:none; cursor:default}
+.cell.today{border-color:var(--pink); border-width:2.5px}
+.cell .dnum{font-weight:700}
+.cell .dots{display:none; gap:3px; margin-top:3px; flex-wrap:wrap; justify-content:center}
+.cell .dot{width:7px; height:7px; border-radius:50%}
+.dot.Mike{background:var(--purple)} .dot.Sara{background:var(--pink)} .dot.Shared{background:var(--tan-dark)}
+/* overlays */
+.overlay{
+  position:fixed; inset:0; z-index:80; background:rgba(40,20,50,.55);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.overlay[hidden]{display:none}
+.modal,.popup{
+  background:var(--card); border:3px solid var(--tan); border-radius:16px;
+  padding:20px; max-width:420px; width:100%; max-height:85vh; overflow:auto;
+}
+.modal p{font-size:16px; margin:0 0 16px}
+.modal-actions{display:flex; gap:10px; justify-content:flex-end}
+.popup h3{margin:0 0 10px; color:var(--purple-dark); padding-right:28px}
+.popup{position:relative}
+#day-close{
+  position:absolute; top:8px; right:10px; background:none; border:none;
+  font-size:26px; cursor:pointer; color:var(--muted); line-height:1;
+}
+.day-item{display:flex; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid #eee3d3; font-size:14px}
+.day-item:last-child{border:none}
+/* add forms */
+.addform{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; padding-top:10px; border-top:2px dashed var(--tan)}
+.flash{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:90;
+  background:var(--purple-dark); color:#fff; padding:10px 20px; border-radius:10px; font-size:14px;
+}
+@media (min-width:720px){
+  .grid2{grid-template-columns:1fr 1fr}
+  .cell{min-height:64px}
+  .cell .dots{display:flex}
+  header h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div id="savebar">
+  <span id="save-indicator" class="saving">Loading…</span>
+  <button id="reset-btn" type="button">Reset to defaults</button>
+</div>
+<header>
+  <h1>Household Budget</h1>
+  <p>Mike &amp; Sara — every dollar gets a name</p>
+</header>
+<nav id="tabs">
+  <button type="button" data-tab="overview" class="active">Overview</button>
+  <button type="button" data-tab="income">Income &amp; bills</button>
+  <button type="button" data-tab="spending">Spending &amp; debt</button>
+  <button type="button" data-tab="calendar">Calendar</button>
+</nav>
+<main>
+  <section id="tab-overview" class="tabpanel"></section>
+  <section id="tab-income" class="tabpanel" hidden></section>
+  <section id="tab-spending" class="tabpanel" hidden></section>
+  <section id="tab-calendar" class="tabpanel" hidden></section>
+</main>
+<div id="modal-overlay" class="overlay" hidden>
+  <div class="modal">
+    <p id="modal-text"></p>
+    <div class="modal-actions">
+      <button id="modal-cancel" type="button" class="btn plain">Keep item</button>
+      <button id="modal-confirm" type="button" class="btn danger">Delete item</button>
+    </div>
+  </div>
+</div>
+<div id="day-overlay" class="overlay" hidden>
+  <div class="popup">
+    <button id="day-close" type="button" aria-label="Close">×</button>
+    <h3 id="day-title"></h3>
+    <div id="day-list"></div>
+  </div>
+</div>
+<script>
+/* ================= utils ================= */
+function uid(){ return 'x' + Math.random().toString(36).slice(2,10); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function num(v){ var n=parseFloat(v); return isNaN(n)?0:n; }
+function fmt(n){ n=num(n); var neg=n<0; n=Math.abs(n); return (neg?'-$':'$')+n.toFixed(2); }
+function ownerTag(o){ return '<span class="tag '+esc(o)+'">'+esc(o)+'</span>'; }
+function monthName(m){ return ['January','February','March','April','May','June','July','August','September','October','November','December'][m]; }
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function todayParts(){ var d=new Date(); return {y:d.getFullYear(),m:d.getMonth(),d:d.getDate()}; }
+
+/* ================= seed data ================= */
+function mkBill(name,amount,owner,paidBy,day){
+  return {id:uid(),name:name,amount:amount,owner:owner,paidBy:paidBy,day:(day==null?null:day),splitMike:50,splitSara:50,enabled:true};
+}
+function seedState(){
+  return {
+    income:[
+      {id:uid(),name:'SEAPCO paycheck',owner:'Mike',amount:1300,per:'paycheck',note:'15th & last day of month'},
+      {id:uid(),name:'Spark delivery',owner:'Sara',amount:0,per:'month',note:'variable — update as known'}
+    ],
+    bills:[
+      mkBill('Netflix',26.99,'Mike','Mike',15),
+      mkBill('YouTube Premium',9.91,'Mike','Mike',null),
+      mkBill('AMC Theatres',28.83,'Mike','Mike',null),
+      mkBill('Audible',14.95,'Mike','Mike',null),
+      mkBill('Amazon Prime',6.99,'Mike','Mike',null),
+      mkBill('Discord Nitro',11.03,'Mike','Mike',null),
+      mkBill('Patreon — Quinns Quest',3.31,'Mike','Mike',null),
+      mkBill('Patreon',4.40,'Mike','Mike',null),
+      mkBill('DoorDash DashPass',9.99,'Mike','Mike',null),
+      mkBill('Apple App Store',12.99,'Mike','Mike',null),
+      mkBill('Google One',2.29,'Mike','Mike',null),
+      mkBill('Obsidian',6.90,'Mike','Mike',null),
+      mkBill('Obsidian (2nd)',6.90,'Mike','Mike',null),
+      mkBill('SoFi investing',25,'Mike','Mike',15),
+      mkBill('Mortgage',500,'Shared','Sara',15),
+      mkBill('Cedar Street Mini Storage',60,'Shared','Sara',15)
+    ],
+    transfers:[
+      {id:uid(),name:'Transfer to Sara',amount:750,day:15},
+      {id:uid(),name:'Transfer to Sara',amount:750,day:30}
+    ],
+    pools:[
+      {id:uid(),name:'Christmas',owner:'Mike',target:1200,balance:0}
+    ],
+    debts:[
+      {id:uid(),name:'First Premier',amount:384,owner:'Mike',note:'due Oct 26'}
+    ],
+    other:[],
+    sliders:{Mike:250,Sara:100},
+    spark:{taxPct:0,carCosts:0,extraSpending:0,workingWeeks:4.33},
+    billFilter:'All',
+    calCursor:null
+  };
+}
+function normalizeState(s){
+  var d=seedState();
+  if(!s||typeof s!=='object') return d;
+  Object.keys(d).forEach(function(k){ if(s[k]!==undefined&&s[k]!==null) d[k]=s[k]; });
+  if(!d.sliders) d.sliders={Mike:250,Sara:100};
+  if(!d.spark) d.spark={taxPct:0,carCosts:0,extraSpending:0,workingWeeks:4.33};
+  return d;
+}
+var state = seedState();
+
+/* ================= calculations ================= */
+function enabledBills(){ return state.bills.filter(function(b){return b.enabled;}); }
+function incomeMonthly(who){
+  return state.income.filter(function(i){return i.owner===who;})
+    .reduce(function(s,i){ return s + num(i.amount)*(i.per==='paycheck'?2:1); },0);
+}
+function billsPaidBy(who){
+  return enabledBills().filter(function(b){return b.paidBy===who;})
+    .reduce(function(s,b){ return s+num(b.amount); },0);
+}
+function sharedBillsTotal(){
+  return enabledBills().filter(function(b){return b.owner==='Shared';})
+    .reduce(function(s,b){ return s+num(b.amount); },0);
+}
+function transfersTotal(){
+  return state.transfers.reduce(function(s,t){ return s+num(t.amount); },0);
+}
+function suggested(who){
+  var inc=incomeMonthly(who), bills=billsPaidBy(who), slider=num(state.sliders[who]), t=transfersTotal();
+  if(who==='Mike') return inc - bills - t - slider;
+  return inc + t - bills - slider; /* Sara: transfers are inflow */
+}
+function pot(){ var tin=transfersTotal(), out=sharedBillsTotal(); return {tin:tin,out:out,surplus:tin-out}; }
+function saraMonthlyNeed(){
+  var saraOwn=enabledBills().filter(function(b){return b.owner==='Sara';})
+    .reduce(function(s,b){ return s+num(b.amount); },0);
+  return saraOwn + sharedBillsTotal()/2;
+}
+function sparkTarget(){
+  var sp=state.spark, weeks=num(sp.workingWeeks)||4.33;
+  var denom=1-num(sp.taxPct)/100; if(!(denom>0)) denom=1;
+  var grossMonthly=(saraMonthlyNeed()+(num(sp.carCosts)+num(sp.extraSpending))*weeks)/denom;
+  return Math.ceil(grossMonthly/weeks-1e-9);
+}
+
+/* ================= Supabase persistence ================= */
+var SUPABASE_URL='https://aysnrdjkfzpslpubgfru.supabase.co';
+var SUPABASE_KEY='sb_publishable_29VqvNEq6jljDrbFrNQdIQ_V01R9y4O';
+var saveTimer=null, savePending=false;
+
+function setIndicator(mode,when){
+  var el=document.getElementById('save-indicator');
+  el.className='';
+  if(mode==='loading'){ el.textContent='Loading…'; el.className='saving'; }
+  else if(mode==='saving'){ el.textContent='Saving…'; el.className='saving'; }
+  else if(mode==='saved'){
+    var t=when||new Date(), h=t.getHours(), m=t.getMinutes(), ap=h>=12?'PM':'AM';
+    h=h%12; if(h===0)h=12;
+    el.textContent='Saved ✓ '+h+':'+(m<10?'0':'')+m+' '+ap; el.className='saved';
+  }
+  else if(mode==='offline'){ el.textContent='Offline — will retry'; el.className='offline'; }
+  else if(mode==='ready'){ el.textContent='Ready — changes save automatically'; el.className='saved'; }
+}
+function markDirty(){
+  render();
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer=setTimeout(persist,1000);
+}
+async function persist(){
+  saveTimer=null;
+  setIndicator('saving');
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared',{
+      method:'PATCH',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify({data:state,updated_at:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error('http '+r.status);
+    savePending=false;
+    setIndicator('saved',new Date());
+  }catch(e){
+    savePending=true;
+    setIndicator('offline');
+  }
+}
+async function loadFromServer(){
+  setIndicator('loading');
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared&select=data',{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok) throw new Error('http '+r.status);
+    var j=await r.json();
+    if(j&&j.length&&j[0].data&&Object.keys(j[0].data).length){
+      state=normalizeState(j[0].data);
+      setIndicator('saved',new Date());
+    }else{
+      setIndicator('ready');
+    }
+  }catch(e){
+    setIndicator('offline');
+  }
+  render();
+}
+window.addEventListener('online',function(){ if(savePending){ persist(); } });
+
+/* ================= modal ================= */
+var modalAction=null;
+function askConfirm(text,confirmLabel,cancelLabel,action){
+  document.getElementById('modal-text').textContent=text;
+  document.getElementById('modal-confirm').textContent=confirmLabel||'Delete item';
+  document.getElementById('modal-cancel').textContent=cancelLabel||'Keep item';
+  modalAction=action||null;
+  document.getElementById('modal-overlay').hidden=false;
+}
+function hideModal(){ document.getElementById('modal-overlay').hidden=true; modalAction=null; }
+function flash(msg){
+  var d=document.createElement('div'); d.className='flash'; d.textContent=msg;
+  document.body.appendChild(d); setTimeout(function(){ d.remove(); },2200);
+}
+/* ================= events / calendar data ================= */
+function eventsForDay(y,m,d){
+  var ev=[];
+  enabledBills().forEach(function(b){
+    if(b.day===d) ev.push({label:b.name,amount:num(b.amount),tag:b.owner,kind:'bill'});
+  });
+  state.transfers.forEach(function(t){
+    if(num(t.day)===d) ev.push({label:t.name+' — Mike to Sara',amount:num(t.amount),tag:'Shared',kind:'transfer'});
+  });
+  var last=daysInMonth(y,m);
+  if(d===15||d===last) ev.push({label:'SEAPCO paycheck (Mike)',amount:1300,tag:'Mike',kind:'income'});
+  return ev;
+}
+function upcomingEvents(n){
+  var out=[], t=todayParts();
+  for(var i=0;i<=n;i++){
+    var dt=new Date(t.y,t.m,t.d+i);
+    var evs=eventsForDay(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    if(evs.length) out.push({date:dt,events:evs});
+  }
+  return out;
+}
+function fmtDate(d){ return monthName(d.getMonth()).slice(0,3)+' '+d.getDate(); }
+
+/* ================= OVERVIEW ================= */
+function sparkCardHTML(){
+  var sp=state.spark, tgt=sparkTarget();
+  return '<div class="card"><h2>Sara\u2019s Spark target</h2>'+
+    '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">'+
+    '<span class="big money" style="color:var(--pink)">'+fmt(tgt)+'</span><span class="muted">/ week gross</span></div>'+
+    '<div class="row"><label class="fld">Tax %<input type="number" id="sp-tax" value="'+esc(sp.taxPct)+'" step="0.1" min="0" max="60" onchange="sparkField(\'taxPct\',this.value)"></label>'+
+    '<label class="fld">Car costs $/week<input type="number" id="sp-car" value="'+esc(sp.carCosts)+'" step="0.5" min="0" onchange="sparkField(\'carCosts\',this.value)"></label>'+
+    '<label class="fld">Extra spending $/week<input type="number" id="sp-extra" value="'+esc(sp.extraSpending)+'" step="1" min="0" onchange="sparkField(\'extraSpending\',this.value)"></label>'+
+    '<label class="fld">Working weeks<input type="number" id="sp-weeks" value="'+esc(sp.workingWeeks)+'" step="0.01" min="1" max="5" onchange="sparkField(\'workingWeeks\',this.value)"></label></div>'+
+    '<p class="muted">Covers Sara\u2019s share of monthly bills ('+fmt(saraMonthlyNeed())+'/mo). Gross target accounts for tax and costs above.</p></div>';
+}
+function snapshotHTML(who){
+  var t=transfersTotal();
+  var rows=[
+    ['Income / mo',fmt(incomeMonthly(who))],
+    ['Bills paid / mo',fmt(billsPaidBy(who))],
+    [who==='Mike'?'Transfers to Sara':'Transfers from Mike',fmt(t)],
+    ['Extra spending allowance',fmt(state.sliders[who])]
+  ];
+  var s=suggested(who);
+  var h='<div class="snap '+who+'"><div style="margin-bottom:6px">'+ownerTag(who)+' <strong>'+who+'</strong></div>';
+  rows.forEach(function(r){ h+='<div class="kv"><span>'+r[0]+'</span><span class="money">'+r[1]+'</span></div>'; });
+  h+='<div class="kv" style="border-top:2px solid var(--tan);margin-top:4px;padding-top:6px"><span><strong>Suggested savings</strong></span><span class="money '+(s<0?'bad':'ok')+'">'+fmt(s)+'</span></div></div>';
+  return h;
+}
+function renderOverview(){
+  var t=todayParts(), html='';
+  /* upcoming */
+  var up=upcomingEvents(7);
+  html+='<div class="card"><h2>Coming up — next 7 days</h2>';
+  if(!up.length) html+='<p class="muted">Nothing due in the next 7 days.</p>';
+  up.forEach(function(u){
+    html+='<div class="row"><span class="grow"><strong>'+fmtDate(u.date)+'</strong></span></div>';
+    u.events.forEach(function(e){
+      html+='<div class="row" style="padding-left:14px"><span class="grow">'+esc(e.label)+'</span>'+ownerTag(e.tag)+'<span class="money">'+fmt(e.amount)+'</span></div>';
+    });
+  });
+  html+='</div>';
+  /* attention: due earlier this month */
+  var attn=enabledBills().filter(function(b){return b.day!=null&&b.day<t.d;});
+  var attnT=state.transfers.filter(function(x){return num(x.day)<t.d;});
+  if(attn.length||attnT.length){
+    html+='<div class="card"><h2>Check these</h2><p class="muted">Due earlier this month — confirm paid:</p>';
+    attn.forEach(function(b){ html+='<div class="row"><span class="grow">'+esc(b.name)+'</span>'+ownerTag(b.owner)+'<span class="money warn">'+fmt(b.amount)+'</span></div>'; });
+    attnT.forEach(function(x){ html+='<div class="row"><span class="grow">'+esc(x.name)+' — Mike to Sara</span><span class="money warn">'+fmt(x.amount)+'</span></div>'; });
+    html+='</div>';
+  }
+  /* pot */
+  var p=pot();
+  html+='<div class="card"><h2>Household pot</h2>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Transfers in (Mike → Sara)</span><span class="money">'+fmt(p.tin)+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Shared bills out</span><span class="money">'+fmt(p.out)+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid var(--tan);margin-top:4px"><span><strong>Surplus</strong></span><span class="money '+(p.surplus<0?'bad':'ok')+'">'+fmt(p.surplus)+'</span></div></div>';
+  /* snapshots */
+  html+='<div class="card"><h2>Per-person snapshot</h2><div class="grid2">'+snapshotHTML('Mike')+snapshotHTML('Sara')+'</div>'+
+    '<p class="muted">Suggested savings = income − bills paid − transfers − extra spending. Transfers are committed household money, never spare cash.</p></div>';
+  /* spark */
+  html+=sparkCardHTML();
+  /* copy/download */
+  html+='<div class="card"><h2>Share the plan</h2><div style="display:flex;gap:10px;flex-wrap:wrap">'+
+    '<button type="button" class="btn" onclick="copyPlan()">Copy plan</button>'+
+    '<button type="button" class="btn secondary" onclick="downloadJSON()">Download</button></div></div>';
+  document.getElementById('tab-overview').innerHTML=html;
+}
+
+/* ================= INCOME & BILLS ================= */
+function ownerOpts(sel){
+  return ['Mike','Sara','Shared'].map(function(o){
+    return '<option value="'+o+'"'+(o===sel?' selected':'')+'>'+o+'</option>';
+  }).join('');
+}
+function dayOpts(sel){
+  var h='<option value=""'+(sel==null?' selected':'')+'>Unknown</option>';
+  for(var d=1;d<=31;d++) h+='<option value="'+d+'"'+(sel===d?' selected':'')+'>'+d+'</option>';
+  return h;
+}
+function incomeRowHTML(i){
+  return '<div class="row"><input class="grow" type="text" value="'+esc(i.name)+'" onchange="incomeField(\''+i.id+'\',\'name\',this.value)" aria-label="Income name">'+
+    '<label class="fld">Owner<select onchange="incomeField(\''+i.id+'\',\'owner\',this.value)">'+ownerOpts(i.owner)+'</select></label>'+
+    '<label class="fld">Amount $/mo<input type="number" step="0.01" min="0" value="'+esc(i.amount)+'" onchange="incomeField(\''+i.id+'\',\'amount\',this.value)"></label>'+
+    '<label class="fld">Per<select onchange="incomeField(\''+i.id+'\',\'per\',this.value)">'+
+    '<option value="paycheck"'+(i.per==='paycheck'?' selected':'')+'>paycheck ×2</option>'+
+    '<option value="month"'+(i.per==='month'?' selected':'')+'>month</option></select></label>'+
+    '<button type="button" class="iconbtn" onclick="delIncome(\''+i.id+'\')" aria-label="Delete">🗑</button></div>';
+}
+function billRowHTML(b){
+  var split='';
+  if(b.owner==='Shared'){
+    split='<label class="fld">Mike %<input type="number" min="0" max="100" style="width:64px" value="'+esc(b.splitMike)+'" onchange="billField(\''+b.id+'\',\'splitMike\',this.value)"></label>'+
+      '<label class="fld">Sara %<input type="number" min="0" max="100" style="width:64px" value="'+esc(b.splitSara)+'" onchange="billField(\''+b.id+'\',\'splitSara\',this.value)"></label>';
+  }
+  return '<div class="row"><input type="checkbox"'+(b.enabled?' checked':'')+' onchange="toggleBill(\''+b.id+'\',this.checked)" aria-label="Enabled">'+
+    '<input class="grow" type="text" value="'+esc(b.name)+'" onchange="billField(\''+b.id+'\',\'name\',this.value)" aria-label="Bill name">'+
+    '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(b.amount)+'" onchange="billField(\''+b.id+'\',\'amount\',this.value)"></label>'+
+    '<label class="fld">Owner<select onchange="billField(\''+b.id+'\',\'owner\',this.value)">'+ownerOpts(b.owner)+'</select></label>'+
+    '<label class="fld">Paid by<select onchange="billField(\''+b.id+'\',\'paidBy\',this.value)">'+ownerOpts(b.paidBy)+'</select></label>'+
+    '<label class="fld">Expected date<select onchange="billField(\''+b.id+'\',\'day\',this.value)">'+dayOpts(b.day)+'</select></label>'+
+    split+
+    '<button type="button" class="iconbtn" onclick="delBill(\''+b.id+'\')" aria-label="Delete">🗑</button></div>';
+}
+function transferRowHTML(t){
+  return '<div class="row"><span class="tag Shared">Mike to Sara</span>'+
+    '<input class="grow" type="text" value="'+esc(t.name)+'" onchange="transferField(\''+t.id+'\',\'name\',this.value)" aria-label="Transfer name">'+
+    '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(t.amount)+'" onchange="transferField(\''+t.id+'\',\'amount\',this.value)"></label>'+
+    '<label class="fld">Day<select onchange="transferField(\''+t.id+'\',\'day\',this.value)">'+dayOpts(num(t.day)||null)+'</select></label>'+
+    '<button type="button" class="iconbtn" onclick="delTransfer(\''+t.id+'\')" aria-label="Delete">🗑</button></div>';
+}
+function renderIncome(){
+  var html='<div class="card"><h2>Income</h2>';
+  state.income.forEach(function(i){ html+=incomeRowHTML(i); });
+  html+='<div class="addform"><input type="text" id="ni-name" placeholder="Income name" class="grow">'+
+    '<select id="ni-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<input type="number" id="ni-amount" placeholder="$/mo" step="0.01" min="0">'+
+    '<button type="button" class="btn small" onclick="addIncome()">Add income</button></div></div>';
+  /* bills */
+  var f=state.billFilter||'All';
+  html+='<div class="card"><h2>Bills</h2><div class="chips">'+
+    ['All','Mike','Sara','Shared'].map(function(o){
+      return '<button type="button" class="'+(f===o?'active':'')+'" onclick="setBillFilter(\''+o+'\')">'+o+'</button>';
+    }).join('')+'</div>';
+  state.bills.filter(function(b){return f==='All'||b.owner===f;}).forEach(function(b){ html+=billRowHTML(b); });
+  html+='<div class="addform"><input type="text" id="nb-name" placeholder="Bill name" class="grow">'+
+    '<input type="number" id="nb-amount" placeholder="$" step="0.01" min="0">'+
+    '<select id="nb-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<select id="nb-paidby"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<button type="button" class="btn small" onclick="addBill()">Add bill</button></div>'+
+    '<p class="muted">Owner = whose budget it belongs to. Paid by = whose account it comes out of.</p></div>';
+  /* transfers */
+  html+='<div class="card"><h2>Transfers to Sara</h2><p class="muted">Mike outflow, Sara inflow. Committed household money — never spare cash.</p>';
+  state.transfers.forEach(function(t){ html+=transferRowHTML(t); });
+  html+='<div class="addform"><input type="number" id="nt-amount" placeholder="$" step="0.01" min="0">'+
+    '<select id="nt-day">'+dayOpts(15)+'</select>'+
+    '<button type="button" class="btn small" onclick="addTransfer()">Add transfer</button></div></div>';
+  /* totals */
+  var p=pot();
+  html+='<div class="card"><h2>Totals</h2>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Mike income / mo</span><span class="money">'+fmt(incomeMonthly('Mike'))+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Mike bills paid / mo</span><span class="money">'+fmt(billsPaidBy('Mike'))+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Sara income / mo</span><span class="money">'+fmt(incomeMonthly('Sara'))+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Sara bills paid / mo</span><span class="money">'+fmt(billsPaidBy('Sara'))+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:3px 0"><span>Transfers to Sara / mo</span><span class="money">'+fmt(p.tin)+'</span></div>'+
+    '<div class="kv" style="display:flex;justify-content:space-between;padding:6px 0;border-top:2px solid var(--tan);margin-top:4px"><span><strong>Household pot surplus</strong></span><span class="money '+(p.surplus<0?'bad':'ok')+'">'+fmt(p.surplus)+'</span></div></div>';
+  document.getElementById('tab-income').innerHTML=html;
+}
+/* income handlers */
+function findIncome(id){ return state.income.find(function(i){return i.id===id;}); }
+function incomeField(id,field,val){
+  var i=findIncome(id); if(!i) return;
+  i[field]=(field==='amount')?num(val):val;
+  markDirty();
+}
+function delIncome(id){
+  var i=findIncome(id); if(!i) return;
+  askConfirm('Delete income "'+i.name+'"? Are you sure?','Delete item','Keep item',function(){
+    state.income=state.income.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addIncome(){
+  var n=document.getElementById('ni-name').value.trim(); if(!n){flash('Name the income first');return;}
+  state.income.push({id:uid(),name:n,owner:document.getElementById('ni-owner').value,amount:num(document.getElementById('ni-amount').value),per:'month',note:''});
+  markDirty();
+}
+/* bill handlers */
+function findBill(id){ return state.bills.find(function(b){return b.id===id;}); }
+function toggleBill(id,on){ var b=findBill(id); if(b){b.enabled=!!on; markDirty();} }
+function billField(id,field,val){
+  var b=findBill(id); if(!b) return;
+  if(field==='amount') b.amount=num(val);
+  else if(field==='day') b.day=(val===''||val==null)?null:parseInt(val,10);
+  else if(field==='splitMike'||field==='splitSara') b[field]=num(val);
+  else b[field]=val;
+  markDirty();
+}
+function setBillFilter(f){ state.billFilter=f; markDirty(); }
+function delBill(id){
+  var b=findBill(id); if(!b) return;
+  askConfirm('Delete bill "'+b.name+'"? Are you sure?','Delete item','Keep item',function(){
+    state.bills=state.bills.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addBill(){
+  var n=document.getElementById('nb-name').value.trim(); if(!n){flash('Name the bill first');return;}
+  state.bills.push({id:uid(),name:n,amount:num(document.getElementById('nb-amount').value),
+    owner:document.getElementById('nb-owner').value,paidBy:document.getElementById('nb-paidby').value,
+    day:null,splitMike:50,splitSara:50,enabled:true});
+  markDirty();
+}
+/* transfer handlers */
+function findTransfer(id){ return state.transfers.find(function(t){return t.id===id;}); }
+function transferField(id,field,val){
+  var t=findTransfer(id); if(!t) return;
+  if(field==='amount') t.amount=num(val);
+  else if(field==='day') t.day=parseInt(val,10)||15;
+  else t[field]=val;
+  markDirty();
+}
+function delTransfer(id){
+  var t=findTransfer(id); if(!t) return;
+  askConfirm('Delete transfer "'+t.name+' '+fmt(t.amount)+'"? Are you sure?','Delete item','Keep item',function(){
+    state.transfers=state.transfers.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addTransfer(){
+  state.transfers.push({id:uid(),name:'Transfer to Sara',amount:num(document.getElementById('nt-amount').value),
+    day:parseInt(document.getElementById('nt-day').value,10)||15});
+  markDirty();
+}
+function sparkField(field,val){ state.spark[field]=num(val); markDirty(); }
+/* ================= SPENDING & DEBT ================= */
+function poolRowHTML(p){
+  var bal=num(p.balance), tgt=num(p.target);
+  var pct=tgt>0?Math.min(100,bal/tgt*100):0;
+  return '<div class="row"><input class="grow" type="text" value="'+esc(p.name)+'" onchange="poolField(\''+p.id+'\',\'name\',this.value)" aria-label="Pool name">'+
+    '<label class="fld">Owner<select onchange="poolField(\''+p.id+'\',\'owner\',this.value)">'+ownerOpts(p.owner)+'</select></label>'+
+    '<label class="fld">Target $<input type="number" step="0.01" min="0" value="'+esc(p.target)+'" onchange="poolField(\''+p.id+'\',\'target\',this.value)"></label>'+
+    '<label class="fld">Balance $<input type="number" step="0.01" value="'+esc(p.balance)+'" onchange="poolField(\''+p.id+'\',\'balance\',this.value)"></label>'+
+    '<button type="button" class="iconbtn" onclick="delPool(\''+p.id+'\')" aria-label="Delete">🗑</button></div>'+
+    '<div class="progress"><div style="width:'+pct.toFixed(1)+'%"></div></div>'+
+    '<div class="muted" style="margin:2px 0 10px">'+fmt(bal)+' of '+fmt(tgt)+' ('+Math.round(pct)+'%)</div>';
+}
+function renderSpending(){
+  var html='<div class="card"><h2>Savings pools</h2>';
+  state.pools.forEach(function(p){ html+=poolRowHTML(p); });
+  html+='<div class="addform"><input type="text" id="np-name" placeholder="Pool name" class="grow">'+
+    '<select id="np-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<input type="number" id="np-target" placeholder="Target $" step="0.01" min="0">'+
+    '<button type="button" class="btn small" onclick="addPool()">Add pool</button></div></div>';
+  html+='<div class="card"><h2>Extra monthly spending</h2>';
+  ['Mike','Sara'].forEach(function(who){
+    var s=suggested(who), key=who.toLowerCase();
+    html+='<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<span>'+ownerTag(who)+' <strong>'+who+'</strong></span>'+
+      '<span class="money" id="sl-'+key+'-val">'+fmt(state.sliders[who])+'</span></div>'+
+      '<input type="range" id="sl-'+key+'" min="0" max="1000" step="10" value="'+esc(state.sliders[who])+'" oninput="sliderInput(\''+who+'\',this.value)" onchange="sliderDone()">'+
+      '<div style="display:flex;justify-content:space-between"><span class="muted">Suggested savings</span><span class="money '+(s<0?'bad':'ok')+'" id="sug-'+key+'">'+fmt(s)+'</span></div></div>';
+  });
+  html+='<p class="muted">Suggested savings = income &minus; bills paid &minus; transfers &minus; this allowance.</p></div>';
+  html+='<div class="card"><h2>Debt payments</h2>';
+  state.debts.forEach(function(d){
+    html+='<div class="row"><input class="grow" type="text" value="'+esc(d.name)+'" onchange="debtField(\''+d.id+'\',\'name\',this.value)" aria-label="Debt name">'+
+      '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(d.amount)+'" onchange="debtField(\''+d.id+'\',\'amount\',this.value)"></label>'+
+      '<label class="fld">Owner<select onchange="debtField(\''+d.id+'\',\'owner\',this.value)">'+ownerOpts(d.owner)+'</select></label>'+
+      '<input class="grow" type="text" placeholder="Note" value="'+esc(d.note||'')+'" onchange="debtField(\''+d.id+'\',\'note\',this.value)" aria-label="Note">'+
+      '<button type="button" class="iconbtn" onclick="delDebt(\''+d.id+'\')" aria-label="Delete">🗑</button></div>';
+  });
+  html+='<div class="addform"><input type="text" id="nd-name" placeholder="Debt name" class="grow">'+
+    '<input type="number" id="nd-amount" placeholder="$" step="0.01" min="0">'+
+    '<select id="nd-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<button type="button" class="btn small" onclick="addDebt()">Add debt</button></div></div>';
+  html+='<div class="card"><h2>Other planned spending</h2>';
+  state.other.forEach(function(o){
+    html+='<div class="row"><input class="grow" type="text" value="'+esc(o.name)+'" onchange="otherField(\''+o.id+'\',\'name\',this.value)" aria-label="Item name">'+
+      '<label class="fld">Amount<input type="number" step="0.01" min="0" value="'+esc(o.amount)+'" onchange="otherField(\''+o.id+'\',\'amount\',this.value)"></label>'+
+      '<label class="fld">Owner<select onchange="otherField(\''+o.id+'\',\'owner\',this.value)">'+ownerOpts(o.owner)+'</select></label>'+
+      '<button type="button" class="iconbtn" onclick="delOther(\''+o.id+'\')" aria-label="Delete">🗑</button></div>';
+  });
+  html+='<div class="addform"><input type="text" id="no-name" placeholder="Item name" class="grow">'+
+    '<input type="number" id="no-amount" placeholder="$" step="0.01" min="0">'+
+    '<select id="no-owner"><option>Mike</option><option>Sara</option><option>Shared</option></select>'+
+    '<button type="button" class="btn small" onclick="addOther()">Add item</button></div></div>';
+  document.getElementById('tab-spending').innerHTML=html;
+}
+function findPool(id){ return state.pools.find(function(p){return p.id===id;}); }
+function poolField(id,field,val){
+  var p=findPool(id); if(!p) return;
+  if(field==='target'||field==='balance') p[field]=num(val); else p[field]=val;
+  markDirty();
+}
+function delPool(id){
+  var p=findPool(id); if(!p) return;
+  askConfirm('Delete savings pool "'+p.name+'"? Are you sure?','Delete item','Keep item',function(){
+    state.pools=state.pools.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addPool(){
+  var n=document.getElementById('np-name').value.trim(); if(!n){flash('Name the pool first');return;}
+  state.pools.push({id:uid(),name:n,owner:document.getElementById('np-owner').value,
+    target:num(document.getElementById('np-target').value),balance:0});
+  markDirty();
+}
+function sliderInput(who,val){
+  state.sliders[who]=num(val);
+  var key=who.toLowerCase(), s=suggested(who);
+  var vEl=document.getElementById('sl-'+key+'-val'); if(vEl) vEl.textContent=fmt(val);
+  var sEl=document.getElementById('sug-'+key); if(sEl){ sEl.textContent=fmt(s); sEl.className='money '+(s<0?'bad':'ok'); }
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer=setTimeout(persist,1000);
+}
+function sliderDone(){ markDirty(); }
+function findDebt(id){ return state.debts.find(function(d){return d.id===id;}); }
+function debtField(id,field,val){
+  var d=findDebt(id); if(!d) return;
+  d[field]=(field==='amount')?num(val):val; markDirty();
+}
+function delDebt(id){
+  var d=findDebt(id); if(!d) return;
+  askConfirm('Delete debt payment "'+d.name+'"? Are you sure?','Delete item','Keep item',function(){
+    state.debts=state.debts.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addDebt(){
+  var n=document.getElementById('nd-name').value.trim(); if(!n){flash('Name the debt first');return;}
+  state.debts.push({id:uid(),name:n,amount:num(document.getElementById('nd-amount').value),
+    owner:document.getElementById('nd-owner').value,note:''});
+  markDirty();
+}
+function findOther(id){ return state.other.find(function(o){return o.id===id;}); }
+function otherField(id,field,val){
+  var o=findOther(id); if(!o) return;
+  o[field]=(field==='amount')?num(val):val; markDirty();
+}
+function delOther(id){
+  var o=findOther(id); if(!o) return;
+  askConfirm('Delete "'+o.name+'"? Are you sure?','Delete item','Keep item',function(){
+    state.other=state.other.filter(function(x){return x.id!==id;}); markDirty();
+  });
+}
+function addOther(){
+  var n=document.getElementById('no-name').value.trim(); if(!n){flash('Name the item first');return;}
+  state.other.push({id:uid(),name:n,amount:num(document.getElementById('no-amount').value),
+    owner:document.getElementById('no-owner').value});
+  markDirty();
+}
+
+/* ================= CALENDAR ================= */
+function calCursor(){
+  if(state.calCursor&&state.calCursor.y!=null) return state.calCursor;
+  var t=todayParts(); return {y:t.y,m:t.m};
+}
+function renderCalendar(){
+  var c=calCursor(), t=todayParts();
+  var first=new Date(c.y,c.m,1).getDay(), dim=daysInMonth(c.y,c.m);
+  var html='<div class="card"><div class="cal-head">'+
+    '<button type="button" class="btn plain small" onclick="calNav(-1)" aria-label="Previous month">‹</button>'+
+    '<h2>'+monthName(c.m)+' '+c.y+'</h2>'+
+    '<button type="button" class="btn plain small" onclick="calNav(1)" aria-label="Next month">›</button></div>'+
+    '<div style="text-align:center;margin-bottom:8px"><button type="button" class="btn plain small" onclick="calToday()">This month</button></div>'+
+    '<div class="cal-grid">';
+  ['S','M','T','W','T','F','S'].forEach(function(d){ html+='<div class="cal-dow">'+d+'</div>'; });
+  for(var i=0;i<first;i++) html+='<div class="cell blank"></div>';
+  for(var d=1;d<=dim;d++){
+    var evs=eventsForDay(c.y,c.m,d);
+    var dots=evs.slice(0,4).map(function(e){ return '<span class="dot '+esc(e.tag)+'"></span>'; }).join('');
+    var cls='cell'+((d===t.d&&c.m===t.m&&c.y===t.y)?' today':'');
+    html+='<button type="button" class="'+cls+'" onclick="openDay('+c.y+','+c.m+','+d+')"><span class="dnum">'+d+'</span><span class="dots">'+dots+'</span></button>';
+  }
+  html+='</div><p class="muted">Tap a date to see what\u2019s owed that day.</p></div>';
+  document.getElementById('tab-calendar').innerHTML=html;
+}
+function calNav(dir){
+  var c=calCursor(), m=c.m+dir, y=c.y;
+  if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+  state.calCursor={y:y,m:m}; markDirty();
+}
+function calToday(){ state.calCursor=null; markDirty(); }
+function openDay(y,m,d){
+  var evs=eventsForDay(y,m,d);
+  document.getElementById('day-title').textContent=monthName(m)+' '+d+', '+y;
+  var h='';
+  if(!evs.length) h='<p class="muted">Nothing owed this day.</p>';
+  evs.forEach(function(e){
+    h+='<div class="day-item"><span>'+esc(e.label)+'<br>'+ownerTag(e.tag)+'</span><span class="money">'+fmt(e.amount)+'</span></div>';
+  });
+  document.getElementById('day-list').innerHTML=h;
+  document.getElementById('day-overlay').hidden=false;
+}
+/* ================= copy / download / reset ================= */
+function buildPlanText(){
+  var L=[];
+  L.push('HOUSEHOLD BUDGET PLAN');
+  L.push('Income: Mike '+fmt(incomeMonthly('Mike'))+'/mo | Sara '+fmt(incomeMonthly('Sara'))+'/mo');
+  L.push('Bills paid by Mike: '+fmt(billsPaidBy('Mike'))+'/mo | by Sara: '+fmt(billsPaidBy('Sara'))+'/mo');
+  var p=pot();
+  L.push('Transfers to Sara: '+fmt(p.tin)+'/mo | Shared bills: '+fmt(p.out)+'/mo | Pot surplus: '+fmt(p.surplus));
+  L.push('Extra spending: Mike '+fmt(state.sliders.Mike)+'/mo | Sara '+fmt(state.sliders.Sara)+'/mo');
+  L.push('Suggested savings: Mike '+fmt(suggested('Mike'))+' | Sara '+fmt(suggested('Sara')));
+  L.push('Savings pools:');
+  state.pools.forEach(function(pl){ L.push('  - '+pl.name+' ('+pl.owner+'): '+fmt(pl.balance)+' / '+fmt(pl.target)); });
+  if(state.debts.length){
+    L.push('Debt payments:');
+    state.debts.forEach(function(d){ L.push('  - '+d.name+' ('+d.owner+'): '+fmt(d.amount)+(d.note?' — '+d.note:'')); });
+  }
+  L.push('Sara Spark weekly target: '+fmt(sparkTarget()));
+  return L.join('\n');
+}
+function fallbackCopy(t){
+  var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  ta.remove();
+}
+function copyPlan(){
+  var t=buildPlanText();
+  function done(){ flash('Plan copied to clipboard'); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(function(){ fallbackCopy(t); done(); });
+  }else{ fallbackCopy(t); done(); }
+}
+function downloadJSON(){
+  var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='household-budget.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },800);
+  flash('Downloaded household-budget.json');
+}
+function wireReset(){
+  document.getElementById('reset-btn').addEventListener('click',function(){
+    askConfirm('Reset everything to the published defaults? Are you sure?','Reset to defaults','Keep my numbers',function(){
+      var headers={
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      };
+      fetch(SUPABASE_URL+'/rest/v1/budget_state?id=eq.shared',{
+        method:'PATCH',headers:headers,
+        body:JSON.stringify({data:{},updated_at:new Date().toISOString()})
+      }).catch(function(){});
+      state=seedState();
+      setIndicator('saved',new Date());
+      render();
+    });
+  });
+}
+
+/* ================= render + init ================= */
+function render(){
+  renderOverview();
+  renderIncome();
+  renderSpending();
+  renderCalendar();
+}
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('#tabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#tabs button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      var t=b.getAttribute('data-tab');
+      document.querySelectorAll('.tabpanel').forEach(function(p){ p.hidden=true; });
+      document.getElementById('tab-'+t).hidden=false;
+    });
+  });
+  document.getElementById('modal-cancel').addEventListener('click',hideModal);
+  document.getElementById('modal-confirm').addEventListener('click',function(){
+    var a=modalAction; hideModal(); if(a) a();
+  });
+  document.getElementById('modal-overlay').addEventListener('click',function(e){
+    if(e.target===this) hideModal();
+  });
+  document.getElementById('day-close').addEventListener('click',function(){
+    document.getElementById('day-overlay').hidden=true;
+  });
+  document.getElementById('day-overlay').addEventListener('click',function(e){
+    if(e.target===this) this.hidden=true;
+  });
+  wireReset();
+  render();
+  loadFromServer();
+});
+</script>
+</body>
+</html>
