@@ -347,6 +347,10 @@
           <div class="pot-stat"><span>Shared bills paid by Sara</span><strong id="potBills">$560.00</strong></div>
           <div class="pot-stat"><span id="potBalanceLabel">Surplus</span><strong class="surplus" id="potBalance">$940.00</strong></div>
         </section>
+        <section class="upcoming-card" aria-labelledby="dueWeekTitle">
+          <div class="upcoming-head"><div><h2 id="dueWeekTitle">Bills due this week</h2><p>Due within the next 7 days, including overdue. Marking one paid removes it from this list.</p></div><div class="compact-field"><label for="dueWeekOwnerFilter">Owner</label><select id="dueWeekOwnerFilter"><option value="All">All owners</option><option>Mike</option><option>Sara</option><option>Shared</option></select></div></div>
+          <div class="upcoming-list" id="dueWeekList"></div>
+        </section>
         <section class="upcoming-card" aria-labelledby="upcomingTitle">
           <div class="upcoming-head"><div><h2 id="upcomingTitle">Upcoming bills &amp; transfers</h2><p id="upcomingContext">What is due next, based on today.</p></div><div class="upcoming-tools"><div class="upcoming-sort" role="group" aria-label="Sort upcoming bills"><button type="button" data-upcoming-sort="date" aria-pressed="true">By date</button><button type="button" data-upcoming-sort="name" aria-pressed="false">A–Z</button><button type="button" data-upcoming-sort="owner" aria-pressed="false">By owner</button></div><button id="viewCalendarBtn" type="button">View calendar</button></div></div>
           <div class="upcoming-filterbar" aria-label="Filter dashboard bills"><div class="compact-field"><label for="upcomingOwnerFilter">Owner</label><select id="upcomingOwnerFilter"><option value="All">All owners</option><option>Mike</option><option>Sara</option><option>Shared</option></select></div><div class="compact-field"><label for="upcomingTypeFilter">Type</label><select id="upcomingTypeFilter"><option value="All">All types</option><option value="monthly">Monthly</option><option value="annual">Annual</option><option value="once">One-time</option></select></div><div class="compact-field"><label for="upcomingStatusFilter">Status</label><select id="upcomingStatusFilter"><option value="unpaid">All unpaid</option><option value="soon">Due soon</option><option value="overdue">Overdue</option><option value="upcoming">Upcoming</option><option value="paid">Paid</option><option value="all">All statuses</option></select></div></div>
@@ -399,7 +403,7 @@
         <section class="calendar-shell" aria-label="Expected date calendar">
           <div class="calendar-head">
             <div><h2 id="calendarTitle">This month</h2><p>Expected dates from bills, transfers, subscriptions, and debt payments.</p></div>
-            <div class="calendar-controls" aria-label="Calendar month controls"><button id="calendarPrev" type="button" aria-label="Previous month">‹</button><button class="today-btn" id="calendarToday" type="button">Today</button><button id="calendarNext" type="button" aria-label="Next month">›</button></div>
+            <div class="calendar-controls" aria-label="Calendar month controls"><button id="calendarPrev" type="button" aria-label="Previous month">‹</button><button class="today-btn" id="calendarToday" type="button">Today</button><button id="calendarNext" type="button" aria-label="Next month">›</button><div class="compact-field"><label for="calendarOwnerFilter">Owner</label><select id="calendarOwnerFilter"><option value="All">All owners</option><option>Mike</option><option>Sara</option><option>Shared</option></select></div></div>
           </div>
           <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
           <div class="calendar-grid" id="calendarGrid"></div>
@@ -422,7 +426,7 @@
   </div>
   <script>
     (function () {
-      var state = { filter: 'All', activeTab: 'overview', upcomingSort: 'date', upcomingOwner: 'All', upcomingType: 'All', upcomingStatus: 'unpaid', plannerSort: 'date', plannerType: 'All', plannerStatus: 'All', calendarYear: null, calendarMonth: null, selectedCalendarDay: null, nextId: 22, items: [
+      var state = { filter: 'All', activeTab: 'overview', upcomingSort: 'date', upcomingOwner: 'All', upcomingType: 'All', upcomingStatus: 'unpaid', plannerSort: 'date', plannerType: 'All', plannerStatus: 'All', calendarOwner: 'All', dueWeekOwner: 'All', calendarYear: null, calendarMonth: null, selectedCalendarDay: null, nextId: 22, items: [
         { id: 1, type: 'income', name: 'Mike — SEAPCO take-home (current estimate)', amount: 2600, owner: 'Mike', split: 50 },
         { id: 2, type: 'bills', name: 'Mortgage', amount: 500, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
         { id: 3, type: 'bills', name: 'Cedar Street Mini Storage — usually $60–$80; current amount $60', amount: 60, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
@@ -509,7 +513,7 @@
       function hydrateArtifactPayload(d) {
         if (Array.isArray(d.items)) state.items = d.items;
         if (Number.isFinite(Number(d.nextId))) state.nextId = Number(d.nextId);
-        ['filter', 'activeTab', 'upcomingSort', 'upcomingOwner', 'upcomingType', 'upcomingStatus', 'plannerSort', 'plannerType', 'plannerStatus'].forEach(function (k) { if (d[k] !== undefined) state[k] = d[k]; });
+        ['filter', 'activeTab', 'upcomingSort', 'upcomingOwner', 'upcomingType', 'upcomingStatus', 'plannerSort', 'plannerType', 'plannerStatus', 'calendarOwner', 'dueWeekOwner'].forEach(function (k) { if (d[k] !== undefined) state[k] = d[k]; });
         if (Number.isInteger(d.calendarYear)) state.calendarYear = d.calendarYear;
         if (Number.isInteger(d.calendarMonth) && d.calendarMonth >= 0 && d.calendarMonth <= 11) state.calendarMonth = d.calendarMonth;
         if (Number.isInteger(d.selectedCalendarDay)) state.selectedCalendarDay = d.selectedCalendarDay;
@@ -580,7 +584,7 @@
       function cycleTheme() { var t = currentTheme(); var nx = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]; try { localStorage.setItem('budget-theme', nx); } catch (e) {} applyTheme(); }
       applyTheme();
       function savedPayload() {
-        return { v: 3, nextId: state.nextId, filter: state.filter, activeTab: state.activeTab, upcomingSort: state.upcomingSort, upcomingOwner: state.upcomingOwner, upcomingType: state.upcomingType, upcomingStatus: state.upcomingStatus, plannerSort: state.plannerSort, plannerType: state.plannerType, plannerStatus: state.plannerStatus, calendarYear: calendarCursor.getFullYear(), calendarMonth: calendarCursor.getMonth(), selectedCalendarDay: selectedCalendarDay, items: state.items, personalSpending: state.personalSpending, settings: { taxReserve: n(document.getElementById('taxReserve').value), carReserve: n(document.getElementById('carReserve').value), weeksMonth: n(document.getElementById('weeksMonth').value), expectedWeek: n(document.getElementById('expectedWeek').value) } };
+        return { v: 3, nextId: state.nextId, filter: state.filter, activeTab: state.activeTab, upcomingSort: state.upcomingSort, upcomingOwner: state.upcomingOwner, upcomingType: state.upcomingType, upcomingStatus: state.upcomingStatus, plannerSort: state.plannerSort, plannerType: state.plannerType, plannerStatus: state.plannerStatus, calendarOwner: state.calendarOwner, dueWeekOwner: state.dueWeekOwner, calendarYear: calendarCursor.getFullYear(), calendarMonth: calendarCursor.getMonth(), selectedCalendarDay: selectedCalendarDay, items: state.items, personalSpending: state.personalSpending, settings: { taxReserve: n(document.getElementById('taxReserve').value), carReserve: n(document.getElementById('carReserve').value), weeksMonth: n(document.getElementById('weeksMonth').value), expectedWeek: n(document.getElementById('expectedWeek').value) } };
       }
       function saveToHash() {
         if (suppressSave) return;
@@ -596,6 +600,7 @@
         ['Mike', 'Sara'].forEach(function (person) { var key = person.toLowerCase(); document.getElementById(key + 'SpendingRange').value = Math.min(1200, state.personalSpending[person]); document.getElementById(key + 'SpendingValue').textContent = money.format(state.personalSpending[person]); });
         document.getElementById('upcomingOwnerFilter').value = state.upcomingOwner; document.getElementById('upcomingTypeFilter').value = state.upcomingType; document.getElementById('upcomingStatusFilter').value = state.upcomingStatus;
         document.getElementById('plannerTypeFilter').value = state.plannerType; document.getElementById('plannerStatusFilter').value = state.plannerStatus;
+        document.getElementById('calendarOwnerFilter').value = state.calendarOwner; document.getElementById('dueWeekOwnerFilter').value = state.dueWeekOwner;
       }
       function scheduleOf(item) { if (item.schedule) return item.schedule; return /^\d{4}-\d{2}-\d{2}$/.test(String(item.expected || '').trim()) ? 'once' : 'monthly'; }
       function monthlyDays(item) { var raw = String(item.expected || '').trim(); if (!raw || /^unknown$/i.test(raw)) return []; return raw.split(',').map(function (part) { return Number(part.trim().replace(/(?:st|nd|rd|th)$/i, '')); }).filter(function (day) { return Number.isInteger(day) && day >= 1 && day <= 31; }); }
@@ -613,7 +618,7 @@
         var schedule = scheduleOf(item); var now = dateState.start;
         if (schedule === 'once') { var exact = oneTimeDate(item); return exact ? [exact] : []; }
         if (schedule === 'annual') { var parts = annualParts(item); if (!parts || parts.month < 0 || parts.month > 11 || parts.day < 1 || parts.day > 31) return []; var annual = clampedDate(now.getFullYear(), parts.month, parts.day); if (annual < now) annual = clampedDate(now.getFullYear() + 1, parts.month, parts.day); return [annual]; }
-        return monthlyDays(item).map(function (day) { var date = clampedDate(now.getFullYear(), now.getMonth(), day); if (date < now) date = clampedDate(now.getFullYear(), now.getMonth() + 1, day); return date; }).sort(function (a, b) { return a - b; });
+        return monthlyDays(item).map(function (day) { return clampedDate(now.getFullYear(), now.getMonth(), day); }).sort(function (a, b) { return a - b; });
       }
       function expectedDatesForMonth(item, year, month) {
         var schedule = scheduleOf(item);
@@ -623,16 +628,18 @@
       }
       function expectedStatus(item) {
         var dates = expectedDates(item); if (!dates.length) return { text: 'Date not entered', className: '' };
-        var date = dates[0]; var difference = Math.round((date - dateState.start) / 86400000); var schedule = scheduleOf(item);
-        if (schedule === 'once' && difference < 0) return { text: 'Overdue · ' + Math.abs(difference) + (difference === -1 ? ' day past expected' : ' days past expected'), className: 'overdue' };
+        var now = dateState.start; var upcoming = dates.filter(function (d) { return d >= now; });
+        var date = upcoming.length ? upcoming[0] : dates[dates.length - 1];
+        var difference = Math.round((date - now) / 86400000);
+        if (difference < 0) return { text: 'Overdue · ' + Math.abs(difference) + (difference === -1 ? ' day past expected' : ' days past expected'), className: 'overdue' };
         if (difference === 0) return { text: 'Due today', className: 'soon' };
         if (difference <= 7) return { text: 'Due soon · ' + difference + (difference === 1 ? ' day away' : ' days away'), className: 'soon' };
         return { text: 'Next: ' + shortDate.format(date) + ' · ' + difference + ' days away', className: '' };
       }
       function dashboardEventStatus(event) {
-        if (event.item.paid) return 'paid';
+        if (isPaid(event.item)) return 'paid';
         var difference = Math.round((event.date - dateState.start) / 86400000);
-        if (scheduleOf(event.item) === 'once' && difference < 0) return 'overdue';
+        if (difference < 0) return 'overdue';
         return difference <= 7 ? 'soon' : 'upcoming';
       }
       function upcomingRowHtml(event) {
@@ -642,6 +649,21 @@
       }
       function syncUpcomingSortButtons() {
         document.querySelectorAll('[data-upcoming-sort]').forEach(function (button) { button.setAttribute('aria-pressed', button.dataset.upcomingSort === state.upcomingSort ? 'true' : 'false'); });
+      }
+      function renderDueWeek() {
+        var list = document.getElementById('dueWeekList'); if (!list) return;
+        var start = dateState.start; var end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7);
+        var events = [];
+        state.items.filter(function (item) {
+          return (item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers') && !isPaid(item) && (state.dueWeekOwner === 'All' || item.owner === state.dueWeekOwner);
+        }).forEach(function (item) { expectedDates(item).forEach(function (date) { if (date <= end) events.push({ date: date, item: item }); }); });
+        events.sort(function (a, b) { return a.date - b.date || a.item.name.localeCompare(b.item.name); });
+        list.innerHTML = events.length ? events.map(function (event) {
+          var item = event.item; var diff = Math.round((event.date - start) / 86400000);
+          var flag = diff < 0 ? 'Overdue' : diff === 0 ? 'Due today' : 'In ' + diff + 'd';
+          var detail = item.type === 'transfers' ? 'Mike → Sara' : item.owner + ' · Paid by ' + item.paidBy;
+          return '<div class="upcoming-row" style="' + ownerStyle(item.owner) + '"><span class="upcoming-date">' + shortDate.format(event.date) + '</span><span class="upcoming-name"><strong>' + escapeHtml(item.name || 'Untitled') + '</strong><span>' + detail + '</span></span><span class="upcoming-amount">' + money2.format(item.amount) + '</span><span class="due-flag' + (diff < 0 ? ' overdue' : diff <= 1 ? ' soon' : '') + '">' + flag + '</span><button class="paid-action" type="button" data-paid-id="' + item.id + '">' + (item.type === 'transfers' ? 'Mark sent' : 'Mark paid') + '</button></div>';
+        }).join('') : '<div class="upcoming-empty">Nothing due in the next 7 days.</div>';
       }
       function renderUpcoming() {
         var tracked = state.items.filter(function (item) {
@@ -668,22 +690,24 @@
           });
         } else listHtml = visibleEvents.map(upcomingRowHtml).join('');
         document.getElementById('upcomingList').innerHTML = listHtml;
-        var unknown = tracked.filter(function (item) { if (expectedDates(item).length) return false; if (state.upcomingStatus === 'all') return true; if (state.upcomingStatus === 'paid') return item.paid; if (state.upcomingStatus === 'unpaid') return !item.paid; return false; }); var more = Math.max(0, events.length - visibleEvents.length); var notes = []; if (more) notes.push(more + ' later ' + (more === 1 ? 'date is' : 'dates are') + ' shown in the calendar'); if (unknown.length) notes.push(unknown.length + (unknown.length === 1 ? ' matching bill has' : ' matching bills have') + ' an unknown expected date'); document.getElementById('upcomingUnknown').innerHTML = notes.length ? '<div class="upcoming-unknown">' + notes.join(' · ') + '.</div>' : '';
-        syncUpcomingSortButtons(); renderPaid();
+        var unknown = tracked.filter(function (item) { if (expectedDates(item).length) return false; if (state.upcomingStatus === 'all') return true; if (state.upcomingStatus === 'paid') return isPaid(item); if (state.upcomingStatus === 'unpaid') return !isPaid(item); return false; }); var more = Math.max(0, events.length - visibleEvents.length); var notes = []; if (more) notes.push(more + ' later ' + (more === 1 ? 'date is' : 'dates are') + ' shown in the calendar'); if (unknown.length) notes.push(unknown.length + (unknown.length === 1 ? ' matching bill has' : ' matching bills have') + ' an unknown expected date'); document.getElementById('upcomingUnknown').innerHTML = notes.length ? '<div class="upcoming-unknown">' + notes.join(' · ') + '.</div>' : '';
+        syncUpcomingSortButtons(); renderPaid(); renderDueWeek();
       }
       function renderPaid() {
-        var paid = state.items.filter(function (item) { return (item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers') && item.paid; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var paid = state.items.filter(function (item) { return (item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers') && isPaid(item); }).sort(function (a, b) { return a.name.localeCompare(b.name); });
         document.getElementById('paidCount').textContent = paid.length + ' paid or sent';
         document.getElementById('paidList').innerHTML = paid.length ? paid.map(function (item) { var cadence = scheduleOf(item) === 'annual' ? 'Annual' : scheduleOf(item) === 'once' ? 'One-time' : 'Monthly'; var detail = item.type === 'transfers' ? 'Mike → Sara · ' + cadence : item.owner + ' · Paid by ' + item.paidBy + ' · ' + cadence; return '<div class="paid-row" style="' + ownerStyle(item.owner) + '"><span class="paid-check">' + (item.type === 'transfers' ? 'Sent' : 'Paid') + '</span><span class="upcoming-name"><strong>' + escapeHtml(item.name || 'Untitled') + '</strong><span>' + detail + '</span></span><span class="upcoming-amount">' + money2.format(item.amount) + '</span><span class="due-flag">In this link</span><button class="paid-action" type="button" data-paid-id="' + item.id + '">Mark unpaid</button></div>'; }).join('') : '<div class="upcoming-empty">Nothing is marked paid or sent yet.</div>';
       }
-      function setPaid(id, paid) { var item = state.items.find(function (entry) { return entry.id === Number(id); }); if (!item) return; item.paid = paid; renderLists(); calculate(); showToast(paid ? 'Marked paid and saved in this link.' : 'Marked unpaid and saved in this link.'); }
+      function paidMonthKey() { return dateState.now.getFullYear() + '-' + dateState.now.getMonth(); }
+      function isPaid(item) { if (!item.paid) return false; return !item.paidMonth || item.paidMonth === paidMonthKey(); }
+      function setPaid(id, paid) { var item = state.items.find(function (entry) { return entry.id === Number(id); }); if (!item) return; item.paid = paid; item.paidMonth = paid ? paidMonthKey() : null; renderLists(); calculate(); showToast(paid ? 'Marked paid and saved in this link.' : 'Marked unpaid and saved in this link.'); }
       function updateExpectedStatuses() { document.querySelectorAll('.expected-status[data-id]').forEach(function (label) { var item = state.items.find(function (entry) { return entry.id === Number(label.dataset.id); }); if (!item) return; var status = expectedStatus(item); label.textContent = status.text; label.className = 'expected-status' + (status.className ? ' ' + status.className : ''); }); renderUpcoming(); }
       function renderCalendar() {
         var grid = document.getElementById('calendarGrid');
         if (!grid) return;
         var year = calendarCursor.getFullYear(); var month = calendarCursor.getMonth();
         var first = new Date(year, month, 1); var startDay = first.getDay(); var daysInMonth = new Date(year, month + 1, 0).getDate(); var previousDays = new Date(year, month, 0).getDate(); selectedCalendarDay = Math.min(selectedCalendarDay, daysInMonth);
-        var tracked = state.items.filter(function (item) { return item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers'; });
+        var tracked = state.items.filter(function (item) { return (item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers') && (state.calendarOwner === 'All' || item.owner === state.calendarOwner); });
         var events = [];
         tracked.forEach(function (item) { expectedDatesForMonth(item, year, month).forEach(function (date) { events.push({ date: date, item: item }); }); });
         events.sort(function (a, b) { return a.date - b.date || a.item.name.localeCompare(b.item.name); });
@@ -721,7 +745,7 @@
         var splitDisabled = item.owner !== 'Shared';
         var tracksDate = item.type === 'bills' || item.type === 'subscriptions' || item.type === 'debts' || item.type === 'transfers';
         var schedule = scheduleOf(item); var dateLabel = schedule === 'annual' ? 'Month + day' : schedule === 'once' ? 'Fixed date' : 'Day of month'; var placeholder = schedule === 'annual' ? 'March 15' : schedule === 'once' ? 'YYYY-MM-DD' : '15 or 15, 30'; var inputType = schedule === 'once' ? 'date' : 'text'; var expectedValue = item.expected && !/^unknown$/i.test(item.expected) ? item.expected : '';
-        var paidText = item.type === 'transfers' ? (item.paid ? 'Sent — mark unsent' : 'Mark as sent') : (item.paid ? 'Paid — mark unpaid' : 'Mark as paid');
+        var paidText = item.type === 'transfers' ? (isPaid(item) ? 'Sent — mark unsent' : 'Mark as sent') : (isPaid(item) ? 'Paid — mark unpaid' : 'Mark as paid');
         var expectedField = tracksDate ? '<div class="expected-line"><div class="date-field"><label for="schedule-' + item.id + '">Repeats</label><select id="schedule-' + item.id + '" class="item-schedule" aria-label="Payment schedule"><option value="monthly"' + (schedule === 'monthly' ? ' selected' : '') + '>Monthly</option><option value="annual"' + (schedule === 'annual' ? ' selected' : '') + '>Annual</option><option value="once"' + (schedule === 'once' ? ' selected' : '') + '>One-time</option></select></div><div class="date-field"><label for="expected-' + item.id + '">' + dateLabel + '</label><input id="expected-' + item.id + '" class="item-expected" type="' + inputType + '" value="' + escapeHtml(expectedValue) + '" placeholder="' + placeholder + '" aria-label="' + typeLabels[item.type] + ' expected date"></div><em class="expected-status" data-id="' + item.id + '">' + expectedStatus(item).text + '</em><button class="paid-toggle" type="button" aria-pressed="' + (item.paid ? 'true' : 'false') + '">' + paidText + '</button></div>' : '';
         var rowClass = item.type === 'income' ? ' income-row' : item.type === 'transfers' ? ' transfer-row' : '';
         if (item.type === 'savings') {
@@ -750,8 +774,8 @@
       function plannerItemVisible(item) {
         if (item.type !== 'bills' && item.type !== 'subscriptions') return true;
         if (state.plannerType !== 'All' && scheduleOf(item) !== state.plannerType) return false;
-        if (state.plannerStatus === 'paid' && !item.paid) return false;
-        if (state.plannerStatus === 'unpaid' && item.paid) return false;
+        if (state.plannerStatus === 'paid' && !isPaid(item)) return false;
+        if (state.plannerStatus === 'unpaid' && isPaid(item)) return false;
         return true;
       }
       function plannerDateValue(item) { var dates = expectedDates(item); return dates.length ? dates[0].getTime() : Number.POSITIVE_INFINITY; }
@@ -805,25 +829,6 @@
       }
       function shareOf(item, person) { if (item.owner === person) return item.amount; if (item.owner !== 'Shared') return 0; return item.amount * (person === 'Sara' ? item.split / 100 : (100 - item.split) / 100); }
       function allExpenses() { var expenses = state.items.filter(function (i) { return i.type !== 'income' && i.type !== 'transfers'; }).slice(); expenses.push({ type: 'personalSpending', amount: state.personalSpending.Mike, owner: 'Mike', paidBy: 'Mike', split: 50 }, { type: 'personalSpending', amount: state.personalSpending.Sara, owner: 'Sara', paidBy: 'Sara', split: 50 }); return expenses; }
-      function proratedWeeklyTarget(expenses, saraResources, keepRate, workingWeeks) {
-        var monthEnd = new Date(dateState.now.getFullYear(), dateState.now.getMonth(), dateState.daysInMonth);
-        var obligations = [];
-        expenses.forEach(function (item) {
-          if (item.paidBy !== 'Sara' || !item.amount) return;
-          var dates = expectedDates(item); if (!dates.length) dates = [monthEnd];
-          dates.forEach(function (date) { obligations.push({ date: date, amount: item.amount / dates.length }); });
-        });
-        obligations.sort(function (a, b) { return a.date - b.date; });
-        var cumulative = 0; var target = 0;
-        obligations.forEach(function (obligation) {
-          cumulative += obligation.amount;
-          var net = Math.max(0, cumulative - saraResources);
-          var days = Math.round((obligation.date - dateState.start) / 86400000);
-          var weeksAvailable = Math.min(workingWeeks, Math.max(1, (Math.max(0, days) + 1) / 7));
-          target = Math.max(target, net / keepRate / weeksAvailable);
-        });
-        return target;
-      }
       function calculate() {
         var incomes = state.items.filter(function (i) { return i.type === 'income'; }); var transfers = state.items.filter(function (i) { return i.type === 'transfers'; }); var expenses = allExpenses();
         var mikeIncome = incomes.filter(function (i) { return i.owner === 'Mike'; }).reduce(function (s, i) { return s + i.amount; }, 0); var saraIncome = incomes.filter(function (i) { return i.owner === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
@@ -833,7 +838,7 @@
         var shared = expenses.filter(function (i) { return i.owner === 'Shared'; }).reduce(function (s, i) { return s + i.amount; }, 0); var sharedPaidBySara = expenses.filter(function (i) { return i.owner === 'Shared' && i.paidBy === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
         var mikeLeft = mikeIncome - transferTotal - mikeSuggestionOutflows; var saraLeft = transferTotal + saraIncome - saraSuggestionOutflows; var need = Math.max(0, saraOutflows - transferTotal - saraIncome);
         var tax = Math.min(60, n(document.getElementById('taxReserve').value)); var car = Math.min(60, n(document.getElementById('carReserve').value)); var weeks = Math.max(1, n(document.getElementById('weeksMonth').value) || 4.33);
-        var keepRate = Math.max(.05, 1 - (tax + car) / 100); var weekly = proratedWeeklyTarget(expenses, saraIncome + transferTotal, keepRate, weeks); var margin = incomeTotal - expenseTotal; var potBalance = transferTotal - sharedPaidBySara;
+        var keepRate = Math.max(.05, 1 - (tax + car) / 100); var weekly = need > 0 ? need / keepRate / weeks : 0; var margin = incomeTotal - expenseTotal; var potBalance = transferTotal - sharedPaidBySara;
         document.getElementById('weeklyTarget').textContent = money.format(Math.ceil(weekly)); document.getElementById('mikeLeft').textContent = money2.format(mikeLeft); document.getElementById('saraLeft').textContent = money2.format(saraLeft); document.getElementById('sharedBucket').textContent = money2.format(shared);
         document.getElementById('mikeLeft').style.color = mikeLeft < 0 ? 'var(--sara)' : ''; document.getElementById('saraLeft').style.color = saraLeft < 0 ? 'var(--sara)' : '';
         document.getElementById('incomeTotal').textContent = money2.format(incomeTotal); document.getElementById('expenseTotal').textContent = money2.format(expenseTotal);
@@ -869,6 +874,8 @@
       document.querySelectorAll('[data-planner-sort]').forEach(function (button) { button.addEventListener('click', function () { state.plannerSort = button.dataset.plannerSort; renderLists(); saveToHash(); }); });
       document.getElementById('plannerTypeFilter').addEventListener('change', function (event) { state.plannerType = event.target.value; renderLists(); saveToHash(); });
       document.getElementById('plannerStatusFilter').addEventListener('change', function (event) { state.plannerStatus = event.target.value; renderLists(); saveToHash(); });
+      document.getElementById('calendarOwnerFilter').addEventListener('change', function (event) { state.calendarOwner = event.target.value; renderCalendar(); saveToHash(); });
+      document.getElementById('dueWeekOwnerFilter').addEventListener('change', function (event) { state.dueWeekOwner = event.target.value; renderDueWeek(); saveToHash(); });
       document.querySelectorAll('[data-spending-person]').forEach(function (btn) { btn.addEventListener('click', function () { setPersonalSpending(btn.dataset.spendingPerson, btn.dataset.spending); }); });
       ['taxReserve', 'carReserve', 'weeksMonth', 'expectedWeek'].forEach(function (id) { document.getElementById(id).addEventListener('input', calculate); });
       document.getElementById('mikeSpendingRange').addEventListener('input', function (e) { setPersonalSpending('Mike', e.target.value); });
@@ -881,7 +888,7 @@
       document.getElementById('mobileDayDetail').addEventListener('click', function (event) { if (event.target === this || event.target.closest('.day-detail-close')) closeCalendarDetail(true); });
       document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && document.getElementById('mobileDayDetail').classList.contains('open')) closeCalendarDetail(true); });
       document.getElementById('viewCalendarBtn').addEventListener('click', function () { calendarCursor = new Date(dateState.now.getFullYear(), dateState.now.getMonth(), 1); selectedCalendarDay = dateState.now.getDate(); selectTab('calendar', true); renderCalendar(); saveToHash(); });
-      ['upcomingList', 'paidList'].forEach(function (id) { document.getElementById(id).addEventListener('click', function (event) { var button = event.target.closest('[data-paid-id]'); if (!button) return; var item = state.items.find(function (entry) { return entry.id === Number(button.dataset.paidId); }); if (item) setPaid(item.id, !item.paid); }); });
+      ['upcomingList', 'paidList', 'dueWeekList'].forEach(function (id) { document.getElementById(id).addEventListener('click', function (event) { var button = event.target.closest('[data-paid-id]'); if (!button) return; var item = state.items.find(function (entry) { return entry.id === Number(button.dataset.paidId); }); if (item) setPaid(item.id, !isPaid(item)); }); });
       document.getElementById('deleteCancel').addEventListener('click', function () { closeDeleteConfirm(true); });
       document.getElementById('deleteAccept').addEventListener('click', deleteConfirmedItem);
       document.getElementById('deleteConfirm').addEventListener('click', function (event) { if (event.target === this) closeDeleteConfirm(true); });
