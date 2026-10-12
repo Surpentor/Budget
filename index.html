@@ -891,7 +891,7 @@
         else if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); focusables[0].focus(); }
       });
       document.getElementById('copyBtn').addEventListener('click', copySummary); document.getElementById('downloadBtn').addEventListener('click', downloadPlan);
-      document.getElementById('themeToggle').addEventListener('click', cycleTheme); applyTheme(); applyRestoredControls(); syncFilterButtons(); updateDateContext(); renderLists(); calculate(); selectTab(state.activeTab, false); window.setInterval(updateDateContext, 60000); loadFromSupabase();
+      document.getElementById('themeToggle').addEventListener('click', cycleTheme); applyTheme(); suppressSave = true; applyRestoredControls(); syncFilterButtons(); updateDateContext(); renderLists(); calculate(); selectTab(state.activeTab, false); suppressSave = false; window.setInterval(updateDateContext, 60000); loadFromSupabase();
     })();
   </script>
 </body>
