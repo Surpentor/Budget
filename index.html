@@ -305,7 +305,7 @@
     <header class="hero">
       <button id="themeToggle" class="theme-toggle" type="button" aria-label="Theme: auto — tap to change" title="Theme: auto (tap to change)">◐</button>
       <div class="hero-grid">
-        <div><div class="eyebrow" id="heroPeriod">This month</div><h1>Budget</h1><p>Track each person’s income, who an expense is for, who pays it, and the money Mike transfers to Sara for shared bills.</p></div>
+        <div><div class="eyebrow" id="heroPeriod">This month</div><h1>Budget</h1></div>
         <div class="session-note"><div class="date-block"><span class="note-label">Current budget period</span><strong id="budgetPeriod">This month</strong><span id="dateContext">Using your device’s current date.</span></div><div><strong>Saving your budget</strong>Changes save automatically to your shared budget database and sync to every device — no links to manage.<span class="link-save-status" id="linkSaveStatus">Loading…</span></div></div>
       </div>
     </header>
@@ -462,7 +462,7 @@
       /* ================= Supabase persistence (shared database) ================= */
       var SUPABASE_URL = 'https://aysnrdjkfzpslpubgfru.supabase.co';
       var SUPABASE_KEY = 'sb_publishable_29VqvNEq6jljDrbFrNQdIQ_V01R9y4O';
-      var saveTimer = null, savePending = false, remoteReady = false, suppressSave = false, dirtyBeforeLoad = false;
+      var saveTimer = null, savePending = false, remoteReady = false, suppressSave = false, dirtyBeforeLoad = false, hasSynced = false;
       function setSaveStatus(mode, when) {
         var el = document.getElementById('linkSaveStatus'); if (!el) return;
         if (mode === 'loading') el.textContent = 'Loading\u2026';
@@ -531,9 +531,25 @@
             body: JSON.stringify({ data: savedPayload(), updated_at: new Date().toISOString() })
           });
           if (!r.ok) throw new Error('http ' + r.status);
-          savePending = false; setSaveStatus('saved', new Date());
+          savePending = false; hasSynced = true; setSaveStatus('saved', new Date());
         } catch (e) { savePending = true; setSaveStatus('offline'); }
       }
+      var unloadFlushed = false;
+      function flushSaveOnUnload() {
+        if (unloadFlushed || !hasSynced || (!saveTimer && !savePending)) return;
+        unloadFlushed = true;
+        if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+        try {
+          fetch(SUPABASE_URL + '/rest/v1/budget_state?id=eq.shared', {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ data: savedPayload(), updated_at: new Date().toISOString() }),
+            keepalive: true
+          });
+        } catch (e) {}
+      }
+      window.addEventListener('pagehide', flushSaveOnUnload);
+      window.addEventListener('beforeunload', flushSaveOnUnload);
       async function loadFromSupabase() {
         setSaveStatus('loading');
         try {
@@ -548,6 +564,7 @@
             else if (isLiveShape(d)) hydrateMigrated(migrateLiveRow(d));
             applyRestoredControls(); syncFilterButtons(); updateDateContext(); renderLists(); calculate(); selectTab(state.activeTab, false);
             suppressSave = false;
+            hasSynced = true;
             setSaveStatus('ready');
           } else { setSaveStatus('ready'); }
         } catch (e) { setSaveStatus('offline'); }
