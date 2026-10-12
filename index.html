@@ -195,6 +195,7 @@
     .section-head h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
     .section-head p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
     .add-btn { padding: 9px 12px; background: var(--sara); color: var(--sara-ink); white-space: nowrap; box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--leather) 55%, transparent); }
+    .section-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .item-list { padding: 0 14px 14px; }
     .item-row { display: grid; grid-template-columns: minmax(150px, 1.5fr) minmax(90px, .65fr) minmax(105px, .7fr) minmax(105px, .7fr) 72px 34px; gap: 8px; align-items: end; padding: 14px 2px; border-bottom: 1px solid var(--line); }
     .item-row.income-row, .item-row.transfer-row { grid-template-columns: minmax(170px, 1.6fr) minmax(100px, .65fr) minmax(150px, .8fr) 34px; }
@@ -370,12 +371,12 @@
             <button class="filter-btn active" data-filter="All" type="button">All</button><button class="filter-btn" data-filter="Mike" type="button">Mike</button><button class="filter-btn" data-filter="Sara" type="button">Sara</button><button class="filter-btn" data-filter="Shared" type="button">Shared</button>
           </div>
         </div>
-        <div class="bill-list-controls" aria-label="Sort and filter bills and subscriptions"><div class="filter-label">Bills &amp; subscriptions</div><div class="list-sort" role="group" aria-label="Sort bills and subscriptions"><button type="button" data-planner-sort="date" aria-pressed="true">Expected date</button><button type="button" data-planner-sort="name" aria-pressed="false">A–Z</button></div><div class="compact-field"><label for="plannerTypeFilter">Type</label><select id="plannerTypeFilter"><option value="All">All types</option><option value="monthly">Monthly</option><option value="annual">Annual</option><option value="once">One-time</option></select></div><div class="compact-field"><label for="plannerStatusFilter">Status</label><select id="plannerStatusFilter"><option value="All">All statuses</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div></div>
+        <div class="bill-list-controls" aria-label="Filter bills and subscriptions"><div class="filter-label">Bills &amp; subscriptions</div><div class="compact-field"><label for="plannerTypeFilter">Type</label><select id="plannerTypeFilter"><option value="All">All types</option><option value="monthly">Monthly</option><option value="annual">Annual</option><option value="once">One-time</option></select></div><div class="compact-field"><label for="plannerStatusFilter">Status</label><select id="plannerStatusFilter"><option value="All">All statuses</option><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div></div>
         <div class="planner">
-          <section class="section wide"><div class="section-head"><div><h2>Income</h2><p>Enter monthly take-home amounts and replace estimates when averages are confirmed. The Spark target is calculated separately.</p></div><button class="add-btn" data-add="income" type="button">+ Add income</button></div><div class="item-list" id="incomeList"></div></section>
-          <section class="section wide"><div class="section-head"><div><h2>Transfers</h2><p>Money Mike sends to Sara. Add transfer creates a one-time entry; change Repeats when needed.</p></div><button class="add-btn" data-add="transfers" type="button">+ Add transfer</button></div><div class="item-list" id="transfersList"></div></section>
-          <section class="section wide"><div class="section-head"><div><h2>Bills</h2><p>Housing, utilities, insurance, storage, and other recurring costs.</p></div><button class="add-btn" data-add="bills" type="button">+ Add bill</button></div><div class="item-list" id="billsList"></div></section>
-          <section class="section wide"><div class="section-head"><div><h2>Subscriptions</h2><p>Monthly memberships and services.</p></div><button class="add-btn" data-add="subscriptions" type="button">+ Add subscription</button></div><div class="item-list" id="subscriptionsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Income</h2><p>Enter monthly take-home amounts and replace estimates when averages are confirmed. The Spark target is calculated separately.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Income"><button type="button" data-section-sort="income" data-sort-value="name" aria-pressed="true">A–Z</button><button type="button" data-section-sort="income" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="income" type="button">+ Add income</button></div></div><div class="item-list" id="incomeList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Transfers</h2><p>Money Mike sends to Sara. Add transfer creates a one-time entry; change Repeats when needed.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Transfers"><button type="button" data-section-sort="transfers" data-sort-value="date" aria-pressed="true">Date</button><button type="button" data-section-sort="transfers" data-sort-value="name" aria-pressed="false">A–Z</button><button type="button" data-section-sort="transfers" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="transfers" type="button">+ Add transfer</button></div></div><div class="item-list" id="transfersList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Bills</h2><p>Housing, utilities, insurance, storage, and other recurring costs.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Bills"><button type="button" data-section-sort="bills" data-sort-value="date" aria-pressed="true">Date</button><button type="button" data-section-sort="bills" data-sort-value="name" aria-pressed="false">A–Z</button><button type="button" data-section-sort="bills" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="bills" type="button">+ Add bill</button></div></div><div class="item-list" id="billsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Subscriptions</h2><p>Monthly memberships and services.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Subscriptions"><button type="button" data-section-sort="subscriptions" data-sort-value="date" aria-pressed="true">Date</button><button type="button" data-section-sort="subscriptions" data-sort-value="name" aria-pressed="false">A–Z</button><button type="button" data-section-sort="subscriptions" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="subscriptions" type="button">+ Add subscription</button></div></div><div class="item-list" id="subscriptionsList"></div></section>
         </div>
       </div>
 
@@ -387,9 +388,9 @@
           </div>
         </div>
         <div class="planner">
-          <section class="section wide"><div class="section-head"><div><h2>Savings pools</h2><p>Give each goal an owner, set its target and monthly contribution, then update the current balance when you move money.</p></div><button class="add-btn" data-add="savings" type="button">+ Add savings pool</button></div><div class="item-list" id="savingsList"></div></section>
-          <section class="section wide"><div class="section-head"><div><h2>Debt payments</h2><p>Put only this month’s planned payment here.</p></div><button class="add-btn" data-add="debts" type="button">+ Add payment</button></div><div class="item-list" id="debtsList"></div></section>
-          <section class="section wide"><div class="section-head"><div><h2>Other planned spending</h2><p>Eating out, events, gifts, home projects.</p></div><button class="add-btn" data-add="extras" type="button">+ Add extra</button></div><div class="item-list" id="extrasList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Savings pools</h2><p>Give each goal an owner, set its target and monthly contribution, then update the current balance when you move money.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Savings pools"><button type="button" data-section-sort="savings" data-sort-value="name" aria-pressed="true">A–Z</button><button type="button" data-section-sort="savings" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="savings" type="button">+ Add savings pool</button></div></div><div class="item-list" id="savingsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Debt payments</h2><p>Put only this month’s planned payment here.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Debt payments"><button type="button" data-section-sort="debts" data-sort-value="date" aria-pressed="true">Date</button><button type="button" data-section-sort="debts" data-sort-value="name" aria-pressed="false">A–Z</button><button type="button" data-section-sort="debts" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="debts" type="button">+ Add payment</button></div></div><div class="item-list" id="debtsList"></div></section>
+          <section class="section wide"><div class="section-head"><div><h2>Other planned spending</h2><p>Eating out, events, gifts, home projects.</p></div><div class="section-tools"><div class="list-sort" role="group" aria-label="Sort Other planned spending"><button type="button" data-section-sort="extras" data-sort-value="name" aria-pressed="true">A–Z</button><button type="button" data-section-sort="extras" data-sort-value="amount" aria-pressed="false">$</button></div><button class="add-btn" data-add="extras" type="button">+ Add extra</button></div></div><div class="item-list" id="extrasList"></div></section>
           <section class="section wide"><div class="section-head"><div><h2>Extra monthly spending</h2><p>Choose a separate personal spending amount for each person. These amounts reduce that person’s suggested savings.</p></div></div>
             <div class="extra-box"><div class="personal-spending-grid">
               <div class="personal-spending" style="--person-color:var(--mike)"><div class="slider-label"><span>Mike</span><strong id="mikeSpendingValue">$0</strong></div><p>Monthly personal spending from Mike’s account.</p><input id="mikeSpendingRange" type="range" min="0" max="1200" step="25" value="0" aria-label="Mike extra monthly spending"><div class="quick-row"><button class="quick-btn" data-spending-person="Mike" data-spending="0" type="button">$0</button><button class="quick-btn" data-spending-person="Mike" data-spending="100" type="button">$100</button><button class="quick-btn" data-spending-person="Mike" data-spending="250" type="button">$250</button><button class="quick-btn" data-spending-person="Mike" data-spending="500" type="button">$500</button></div></div>
@@ -426,7 +427,7 @@
   </div>
   <script>
     (function () {
-      var state = { filter: 'All', activeTab: 'overview', upcomingSort: 'date', upcomingOwner: 'All', upcomingType: 'All', upcomingStatus: 'unpaid', plannerSort: 'date', plannerType: 'All', plannerStatus: 'All', calendarOwner: 'All', dueWeekOwner: 'All', calendarYear: null, calendarMonth: null, selectedCalendarDay: null, nextId: 22, items: [
+      var state = { filter: 'All', activeTab: 'overview', upcomingSort: 'date', upcomingOwner: 'All', upcomingType: 'All', upcomingStatus: 'unpaid', plannerType: 'All', plannerStatus: 'All', calendarOwner: 'All', dueWeekOwner: 'All', sorts: { income: 'name', transfers: 'date', bills: 'date', subscriptions: 'date', savings: 'name', debts: 'date', extras: 'name' }, calendarYear: null, calendarMonth: null, selectedCalendarDay: null, nextId: 22, items: [
         { id: 1, type: 'income', name: 'Mike — SEAPCO take-home (current estimate)', amount: 2600, owner: 'Mike', split: 50 },
         { id: 2, type: 'bills', name: 'Mortgage', amount: 500, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
         { id: 3, type: 'bills', name: 'Cedar Street Mini Storage — usually $60–$80; current amount $60', amount: 60, owner: 'Shared', paidBy: 'Sara', split: 50, schedule: 'monthly', expected: '15' },
@@ -513,7 +514,8 @@
       function hydrateArtifactPayload(d) {
         if (Array.isArray(d.items)) state.items = d.items;
         if (Number.isFinite(Number(d.nextId))) state.nextId = Number(d.nextId);
-        ['filter', 'activeTab', 'upcomingSort', 'upcomingOwner', 'upcomingType', 'upcomingStatus', 'plannerSort', 'plannerType', 'plannerStatus', 'calendarOwner', 'dueWeekOwner'].forEach(function (k) { if (d[k] !== undefined) state[k] = d[k]; });
+        ['filter', 'activeTab', 'upcomingSort', 'upcomingOwner', 'upcomingType', 'upcomingStatus', 'plannerType', 'plannerStatus', 'calendarOwner', 'dueWeekOwner'].forEach(function (k) { if (d[k] !== undefined) state[k] = d[k]; });
+        if (d.sorts) state.sorts = Object.assign({}, state.sorts, d.sorts);
         if (Number.isInteger(d.calendarYear)) state.calendarYear = d.calendarYear;
         if (Number.isInteger(d.calendarMonth) && d.calendarMonth >= 0 && d.calendarMonth <= 11) state.calendarMonth = d.calendarMonth;
         if (Number.isInteger(d.selectedCalendarDay)) state.selectedCalendarDay = d.selectedCalendarDay;
@@ -584,7 +586,7 @@
       function cycleTheme() { var t = currentTheme(); var nx = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]; try { localStorage.setItem('budget-theme', nx); } catch (e) {} applyTheme(); }
       applyTheme();
       function savedPayload() {
-        return { v: 3, nextId: state.nextId, filter: state.filter, activeTab: state.activeTab, upcomingSort: state.upcomingSort, upcomingOwner: state.upcomingOwner, upcomingType: state.upcomingType, upcomingStatus: state.upcomingStatus, plannerSort: state.plannerSort, plannerType: state.plannerType, plannerStatus: state.plannerStatus, calendarOwner: state.calendarOwner, dueWeekOwner: state.dueWeekOwner, calendarYear: calendarCursor.getFullYear(), calendarMonth: calendarCursor.getMonth(), selectedCalendarDay: selectedCalendarDay, items: state.items, personalSpending: state.personalSpending, settings: { taxReserve: n(document.getElementById('taxReserve').value), carReserve: n(document.getElementById('carReserve').value), weeksMonth: n(document.getElementById('weeksMonth').value), expectedWeek: n(document.getElementById('expectedWeek').value) } };
+        return { v: 3, nextId: state.nextId, filter: state.filter, activeTab: state.activeTab, upcomingSort: state.upcomingSort, upcomingOwner: state.upcomingOwner, upcomingType: state.upcomingType, upcomingStatus: state.upcomingStatus, plannerType: state.plannerType, plannerStatus: state.plannerStatus, calendarOwner: state.calendarOwner, dueWeekOwner: state.dueWeekOwner, sorts: state.sorts, calendarYear: calendarCursor.getFullYear(), calendarMonth: calendarCursor.getMonth(), selectedCalendarDay: selectedCalendarDay, items: state.items, personalSpending: state.personalSpending, settings: { taxReserve: n(document.getElementById('taxReserve').value), carReserve: n(document.getElementById('carReserve').value), weeksMonth: n(document.getElementById('weeksMonth').value), expectedWeek: n(document.getElementById('expectedWeek').value) } };
       }
       function saveToHash() {
         if (suppressSave) return;
@@ -779,14 +781,23 @@
         return true;
       }
       function plannerDateValue(item) { var dates = expectedDates(item); return dates.length ? dates[0].getTime() : Number.POSITIVE_INFINITY; }
-      function syncPlannerSortButtons() { document.querySelectorAll('[data-planner-sort]').forEach(function (button) { button.setAttribute('aria-pressed', button.dataset.plannerSort === state.plannerSort ? 'true' : 'false'); }); }
+      function sectionSortOf(type) { return (state.sorts && state.sorts[type]) || 'name'; }
+      function sortSectionItems(type, items) {
+        var sort = sectionSortOf(type);
+        items.sort(function (a, b) {
+          if (sort === 'amount') return b.amount - a.amount || a.name.localeCompare(b.name);
+          if (sort === 'date') return plannerDateValue(a) - plannerDateValue(b) || a.name.localeCompare(b.name);
+          return a.name.localeCompare(b.name);
+        });
+      }
+      function syncSectionSortButtons() { document.querySelectorAll('[data-section-sort]').forEach(function (btn) { btn.setAttribute('aria-pressed', sectionSortOf(btn.dataset.sectionSort) === btn.dataset.sortValue ? 'true' : 'false'); }); }
       function renderLists() {
         types.forEach(function (type) {
           var list = document.getElementById(type + 'List'); var items = state.items.filter(function (item) { return item.type === type && visibleOwner(item.owner) && plannerItemVisible(item); });
-          if (type === 'bills' || type === 'subscriptions') items.sort(function (a, b) { return state.plannerSort === 'name' ? a.name.localeCompare(b.name) : plannerDateValue(a) - plannerDateValue(b) || a.name.localeCompare(b.name); });
+          sortSectionItems(type, items);
           list.innerHTML = items.length ? items.map(rowTemplate).join('') : '<div class="empty">No ' + (type === 'income' ? 'income' : type) + ' match these filters.</div>';
         });
-        syncPlannerSortButtons(); bindRows(); updateCount(); renderCalendar(); renderUpcoming();
+        syncSectionSortButtons(); bindRows(); updateCount(); renderCalendar(); renderUpcoming();
       }
       function openDeleteConfirm(item, trigger) {
         if (!item) return;
@@ -871,7 +882,7 @@
       document.getElementById('upcomingOwnerFilter').addEventListener('change', function (event) { state.upcomingOwner = event.target.value; renderUpcoming(); saveToHash(); });
       document.getElementById('upcomingTypeFilter').addEventListener('change', function (event) { state.upcomingType = event.target.value; renderUpcoming(); saveToHash(); });
       document.getElementById('upcomingStatusFilter').addEventListener('change', function (event) { state.upcomingStatus = event.target.value; renderUpcoming(); saveToHash(); });
-      document.querySelectorAll('[data-planner-sort]').forEach(function (button) { button.addEventListener('click', function () { state.plannerSort = button.dataset.plannerSort; renderLists(); saveToHash(); }); });
+      document.querySelectorAll('[data-section-sort]').forEach(function (button) { button.addEventListener('click', function () { if (!state.sorts) state.sorts = {}; state.sorts[button.dataset.sectionSort] = button.dataset.sortValue; renderLists(); saveToHash(); }); });
       document.getElementById('plannerTypeFilter').addEventListener('change', function (event) { state.plannerType = event.target.value; renderLists(); saveToHash(); });
       document.getElementById('plannerStatusFilter').addEventListener('change', function (event) { state.plannerStatus = event.target.value; renderLists(); saveToHash(); });
       document.getElementById('calendarOwnerFilter').addEventListener('change', function (event) { state.calendarOwner = event.target.value; renderCalendar(); saveToHash(); });
