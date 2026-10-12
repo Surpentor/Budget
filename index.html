@@ -307,23 +307,7 @@ window.addEventListener('online', function () { if (savePending) persistNow(); }
 /* theme toggle: per-device localStorage, never touches the shared row */
 var THEMES = ['auto', 'dark', 'light']; var THEME_ICONS = { auto: '\u25d0', dark: '\u263e', light: '\u2600' };
 function currentTheme() { var t = null; try { t = localStorage.getItem('budget-theme'); } catch (e) {} return THEMES.indexOf(t) >= 0 ? t : 'auto'; }
-function fitFilterSelects() {
-  var probe = document.createElement('span');
-  probe.style.cssText = 'position:absolute;visibility:hidden;top:0;left:0;white-space:nowrap;pointer-events:none;';
-  document.body.appendChild(probe);
-  document.querySelectorAll('.compact-field select').forEach(function (sel) {
-    var cs = window.getComputedStyle(sel);
-    probe.style.font = cs.font;
-    probe.style.fontWeight = cs.fontWeight;
-    probe.style.letterSpacing = cs.letterSpacing;
-    var longest = '';
-    Array.prototype.forEach.call(sel.options, function (o) { if (o.text.length > longest.length) longest = o.text; });
-    probe.textContent = longest || 'M';
-    var w = Math.ceil(probe.getBoundingClientRect().width);
-    sel.style.width = (w + 44) + 'px'; // text + padding + native arrow room
-  });
-  probe.remove();
-}
+function fitFilterSelects(){var probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;top:0;left:0;white-space:nowrap;pointer-events:none;';document.body.appendChild(probe);document.querySelectorAll('.compact-field select').forEach(function(sel){var cs=window.getComputedStyle(sel);probe.style.font=cs.font;probe.style.fontWeight=cs.fontWeight;probe.style.letterSpacing=cs.letterSpacing;var longest='';Array.prototype.forEach.call(sel.options,function(o){if(o.text.length>longest.length)longest=o.text;});probe.textContent=longest||'M';var w=Math.ceil(probe.getBoundingClientRect().width);sel.style.width=(w+44)+'px';});probe.remove();}
 function applyTheme() { var t = currentTheme(); if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); var el = document.getElementById('themeToggle'); if (el) { el.textContent = THEME_ICONS[t]; el.setAttribute('aria-label', 'Theme: ' + t + ' \u2014 tap to change'); el.title = 'Theme: ' + t + ' (tap to change)'; } }
 function cycleTheme() { var t = currentTheme(); var nx = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]; try { localStorage.setItem('budget-theme', nx); } catch (e) {} applyTheme(); }
 applyTheme();
@@ -622,14 +606,14 @@ var mikeSuggestionOutflows = expenses.filter(function (i) { return i.paidBy === 
 var shared = expenses.filter(function (i) { return i.owner === 'Shared'; }).reduce(function (s, i) { return s + i.amount; }, 0); var sharedPaidBySara = expenses.filter(function (i) { return i.owner === 'Shared' && i.paidBy === 'Sara'; }).reduce(function (s, i) { return s + i.amount; }, 0);
 var mikeLeft = mikeIncome - transferTotal - mikeSuggestionOutflows; var saraLeft = transferTotal + saraIncome - saraSuggestionOutflows; var need = Math.max(0, saraOutflows - transferTotal - saraIncome);
 var tax = Math.min(60, n(document.getElementById('taxReserve').value)); var car = Math.min(60, n(document.getElementById('carReserve').value)); var weeks = Math.max(1, n(document.getElementById('weeksMonth').value) || 4.33);
-var keepRate = Math.max(.05, 1 - (tax + car) / 100); var weekly = need > 0 ? need / keepRate / weeks : 0; var margin = incomeTotal - expenseTotal; var potBalance = transferTotal - sharedPaidBySara;
+var keepRate = Math.max(.05, 1 - (tax + car) / 100); var margin = incomeTotal - expenseTotal; var potBalance = transferTotal - sharedPaidBySara; var buf=Math.max(0,100-potBalance);need+=buf; var weekly = need > 0 ? need / keepRate / weeks : 0;
 document.getElementById('weeklyTarget').textContent = money.format(Math.ceil(weekly)); document.getElementById('mikeLeft').textContent = money2.format(mikeLeft); document.getElementById('saraLeft').textContent = money2.format(saraLeft); document.getElementById('sharedBucket').textContent = money2.format(shared);
 document.getElementById('mikeLeft').style.color = mikeLeft < 0 ? 'var(--sara)' : ''; document.getElementById('saraLeft').style.color = saraLeft < 0 ? 'var(--sara)' : '';
 document.getElementById('incomeTotal').textContent = money2.format(incomeTotal); document.getElementById('expenseTotal').textContent = money2.format(expenseTotal);
 types.forEach(function (type) { var totalEl = document.getElementById(type + 'SectionTotal'); if (!totalEl) return; var visibleItems = state.items.filter(function (item) { return item.type === type && (item.id === state.editingId || (visibleOwner(item.owner) && plannerItemVisible(item))); }); totalEl.textContent = money2.format(sumAmounts(visibleItems)); });
 var marginEl = document.getElementById('marginTotal'); marginEl.textContent = money2.format(margin); marginEl.classList.toggle('negative', margin < 0);
 document.getElementById('potTransfers').textContent = money2.format(transferTotal); document.getElementById('potBills').textContent = money2.format(sharedPaidBySara); document.getElementById('potBalanceLabel').textContent = potBalance >= 0 ? 'Surplus' : 'Shortfall'; var potBalanceEl = document.getElementById('potBalance'); potBalanceEl.textContent = money2.format(Math.abs(potBalance)); potBalanceEl.className = potBalance >= 0 ? 'surplus' : 'shortfall';
-document.getElementById('targetExplain').textContent = need > 0 ? 'Covers the ' + money2.format(need) + ' still needed in Sara’s account after transfers and other income, with ' + (tax + car) + '% set aside for taxes and car costs.' : 'Transfers and Sara’s current income cover the bills marked Paid by Sara. Any Spark earnings can go toward goals or extra spending.';
+document.getElementById('targetExplain').textContent = need > 0 ? 'Covers the ' + money2.format(need) + ' still needed in Sara’s account after transfers and other income' + (buf > 0 ? ' (includes ' + money2.format(buf) + ' emergency buffer)' : '') + ', with ' + (tax + car) + '% set aside for taxes and car costs.' : 'Transfers and Sara’s current income cover the bills marked Paid by Sara. Any Spark earnings can go toward goals or extra spending.';
 document.getElementById('sharedNote').textContent = (shared ? money2.format(shared) + ' is tagged Shared. ' : '') + 'Savings-pool contributions count like any other bill.';
 renderOverviewExtras({incomeTotal:incomeTotal,mikeIncome:mikeIncome,saraIncome:saraIncome}); compareWeek(weekly); saveToHash(); return { incomeTotal: incomeTotal, expenseTotal: expenseTotal, transferTotal: transferTotal, sharedPaidBySara: sharedPaidBySara, mikeOutflows: mikeOutflows, saraOutflows: saraOutflows, mikeLeft: mikeLeft, saraLeft: saraLeft, shared: shared, need: need, weekly: weekly, tax: tax, car: car, weeks: weeks, margin: margin };
 }
